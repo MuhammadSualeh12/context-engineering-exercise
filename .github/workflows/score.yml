@@ -1,0 +1,50 @@
+# Scores every hand-in after the lecturer merges pull requests, and commits results/runs.csv and results/plot.png.
+# Runs on main only, never on a pull request: the answer key comes from the repository secret ANSWER_KEY
+# (the key file, base64), lives in the runner's temp folder for the job and is never printed or committed.
+name: score hand-ins
+
+on:
+  push:
+    branches: [main]
+    paths: ["submissions/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  # One scoring job at a time; merges in quick succession leave one pending job, which scores them all.
+  group: score
+  cancel-in-progress: false
+
+jobs:
+  score:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: astral-sh/setup-uv@v10.4.0
+      - name: Decode the answer key
+        env:
+          ANSWER_KEY: ${{ secrets.ANSWER_KEY }}
+        run: |
+          if [ -z "$ANSWER_KEY" ]; then echo "::error::the repository secret ANSWER_KEY is not set"; exit 1; fi
+          printf '%s' "$ANSWER_KEY" | base64 -d > "$RUNNER_TEMP/key.jsonl"
+      - name: Score every hand-in
+        run: >-
+          uv run --no-project --python 3.12 --with matplotlib==3.11.2
+          python results.py --key "$RUNNER_TEMP/key.jsonl" --submissions submissions --out results
+      - name: Commit the results
+        # A push made with the workflow token starts no new workflow run, so this does not loop.
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add results
+          if git diff --cached --quiet; then echo "results unchanged"; exit 0; fi
+          git commit -m "Results after ${GITHUB_SHA::7}"
+          for attempt in 1 2 3 4 5; do
+            # Merges only touch submissions/ and this job only results/, so the rebase never conflicts.
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep $((attempt * 3))
+          done
+          exit 1

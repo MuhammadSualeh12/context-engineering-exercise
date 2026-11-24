@@ -1,0 +1,27 @@
+# Checks a group's hand-in when its pull request opens or changes.
+# Runs on the pull request's own code with a read-only token and no secrets, so it never sees the answer key.
+# A pull request may only add files inside submissions/<group>/<run-id>/ (harness/submission.py).
+name: validate hand-in
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 2  # the merge commit and its first parent, the target branch
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v10.4.0
+      - name: List the changed files
+        run: git diff --name-status HEAD^1 HEAD | tee "$RUNNER_TEMP/changed.txt"
+      - name: Check the hand-in folders
+        # Standard library only, so no dependency is installed.
+        run: uv run --no-project --python 3.12 python -m harness.submission --changed "$RUNNER_TEMP/changed.txt"
