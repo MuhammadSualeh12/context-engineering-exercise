@@ -134,13 +134,16 @@ def plot(rows: list[dict], path: Path) -> None:
                 ax.scatter(xs, ys, s=22, color=colour, alpha=0.75, edgecolor="none")
                 spread = [j for j, s in enumerate(sets) if not s.startswith("single")]
                 ax.plot([j + offset for j in spread], [medians[j] for j in spread], color=colour, linewidth=1.2)
-        acc.set_xscale("log")
+        # Log axes need data: before the first hand-in the panels stay linear and empty.
+        if mine:
+            acc.set_xscale("log")
         acc.set_ylim(-0.04, 1.04)
         acc.set_xlabel("total tokens per run (input + output, log scale)")
         acc.set_ylabel("accuracy")
         acc.set_title(model, loc="left", color=TUM_BLUE_DARKER, fontsize=11, weight="semibold")
         for ax, label in ((tok, "total tokens per run (log scale)"), (wall, "wall time per run (s, log scale)")):
-            ax.set_yscale("log")
+            if mine:
+                ax.set_yscale("log")
             ax.set_xticks(range(len(sets)), [set_label(s) for s in sets])
             ax.set_xlim(-0.6, len(sets) - 0.4)
             ax.set_xlabel("task set")

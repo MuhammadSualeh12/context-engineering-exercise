@@ -82,6 +82,17 @@ def test_plot_is_written(class_room):
     assert (tmp_path / "out" / "plot.png").read_bytes()[:8] == b"\x89PNG\r\n\x1a\n"
 
 
+def test_no_hand_ins_yet_gives_an_empty_csv_and_a_plot(tmp_path):
+    # The scoring workflow on the freshly published repo: log-scaled axes with no data raised a ValueError.
+    pytest.importorskip("matplotlib")
+    key = tmp_path / "key.jsonl"
+    key.write_text(json.dumps({"id": "q01", "type": "integer", "answer": 0, "category": 2}) + "\n", encoding="utf-8")
+    out = tmp_path / "out"
+    assert results.main(["--key", str(key), "--submissions", str(tmp_path / "submissions"), "--out", str(out)]) == 0
+    assert results.read_csv(out / "runs.csv") == []
+    assert (out / "plot.png").read_bytes()[:8] == b"\x89PNG\r\n\x1a\n"
+
+
 def test_set_order_puts_single_file_sets_last():
     names = ["single_4351_n10", "n40", "n05", "single_4351_n05", "n01"]
     assert sorted(names, key=results.set_order) == ["n01", "n05", "n40", "single_4351_n05", "single_4351_n10"]
