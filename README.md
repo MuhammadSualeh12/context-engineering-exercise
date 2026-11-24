@@ -4,7 +4,9 @@ Exercise for lecture 7 of "Agentic AI and Foundation Models in Civil and Buildin
 Three agent strategies answer questions about IFC building models, and the class compares their accuracy, tokens, cost and time:
 
 - The single agent (`--strategy single`) runs Python on the IFC files and keeps every result in its context.
-- Smart compaction (`--strategy compaction`) is the same agent with a warning once its context passes the compaction threshold; the agent then decides itself what to drop or summarise.
+- Smart compaction (`--strategy compaction`) is the single agent plus a warning.
+  The warning comes once its context passes the compaction threshold.
+  The agent then decides what to drop or summarise.
 - The orchestrator (`--strategy orchestrator`) cannot run Python. It starts one ifc-worker subagent per IFC file, and each ifc-worker answers its questions in its own context.
 
 Every agent, each ifc-worker included, has a context cap of 48000 tokens.
@@ -14,7 +16,8 @@ Every agent, each ifc-worker included, has a context cap of 48000 tokens.
 The setup takes about 15 minutes, most of it downloads, so do it the evening before.
 It needs a GitHub account, about 1 GB of free disk space and the OpenRouter key handed out for the lecture.
 The commands work in PowerShell on Windows and in the terminal on macOS and Linux.
-On Windows, open PowerShell, not the Command Prompt (cmd), which does not take the key command of step 6.
+On Windows, use PowerShell.
+The Command Prompt (cmd) cannot run the key command of step 6.
 
 1. Check that git is installed:
 
@@ -22,8 +25,8 @@ On Windows, open PowerShell, not the Command Prompt (cmd), which does not take t
    git --version
    ```
 
-   If the command is not found, install git: on Windows from https://git-scm.com/downloads/win with the default options, on macOS with `xcode-select --install`, on Linux with the package manager (for example `sudo apt install git`).
-   Then give git a name and an email for the commits, once per laptop:
+   If the command is not found, install git: on Windows from https://git-scm.com/downloads/win with the default options; on macOS with `xcode-select --install`, or by accepting the dialog that `git --version` opens; on Linux with the package manager (for example `sudo apt install git`).
+   Close the terminal and open a new one, then give git a name and an email for the commits, once per laptop:
 
    ```
    git config --global user.name "Firstname Lastname"
@@ -97,7 +100,13 @@ On Windows, open PowerShell, not the Command Prompt (cmd), which does not take t
 
 1. Get the questions.
    They are added to `questions/` in this repository on the morning of the lecture.
-   In the clone, run:
+   Open a terminal and go into the folder of the clone:
+
+   ```
+   cd context-engineering-exercise
+   ```
+
+   Then run:
 
    ```
    git pull https://github.com/sylvainHellin/context-engineering-exercise.git main
@@ -122,7 +131,8 @@ On Windows, open PowerShell, not the Command Prompt (cmd), which does not take t
 ## Options of harness.run
 
 - `--strategy`: `single`, `compaction` or `orchestrator`.
-- `--set`: `n01`, `n05`, `n10`, `n20` or `n40`, with 1 to 40 questions spread over the eleven IFC files; `single_4351_n05` and `single_4351_n10` put 5 or 10 questions on one file, `4351.ifc`.
+- `--set`: `n01`, `n05`, `n10`, `n20` or `n40`: 1 to 40 questions spread over the eleven IFC files.
+  `single_4351_n05` and `single_4351_n10`: 5 or 10 questions on one file, `4351.ifc`.
 - `--group`: the group name from the lecture, for example `g07`.
 - `--submit-dir submissions`: also writes the hand-in folder `submissions/<group>/<run-id>/`.
 - `--threshold`: the compaction threshold in tokens, 30000 by default, used by smart compaction only.
@@ -150,6 +160,35 @@ uv run python -m harness.view runs/g07-single-n05-1
 The trace lists every model call and tool call in order, with its tokens, cost and time.
 In an orchestrator run, the calls of each ifc-worker appear indented under the `task` call that started it.
 
+## Handing in a run
+
+The answer key is not in this repository: GitHub scores the runs after the lecturer merges them.
+
+1. Check the hand-in folders:
+
+   ```
+   uv run python -m harness.submission
+   ```
+
+   The last line reads `0 problem(s)`.
+
+2. Commit the group's folder and push it to the fork, with the group name in place of `g07`:
+
+   ```
+   git add submissions/g07
+   git commit -m "g07: single on n05"
+   git push
+   ```
+
+3. Open a pull request: on the fork's GitHub page, press Contribute, then Open pull request, then Create pull request.
+   Its check passes (green tick) when the pull request only adds hand-in folders and each folder is complete.
+
+4. The lecturer merges the pull requests during the lecture.
+   After each merge, GitHub scores every hand-in into `results/runs.csv` and `results/plot.png` on the `main` branch of this repository.
+
+One pull request can carry several runs.
+Push more commits to it until it is merged, then open a new pull request for later runs.
+
 ## How a run ends
 
 At the end the run prints its status, the number of answered questions, the tokens, the cost and the time.
@@ -173,45 +212,20 @@ The same holds for every other status, since the results table shows each run's 
 - `harness.check` prints `FAIL  API key`: the key is not set in this terminal window; set it (step 6 of the setup).
 - `harness.check` prints `FAIL  model call: UnauthorizedResponseError: User not found.`: the key is wrong or incomplete; copy it again and set it between the quotes.
 - `harness.check` prints `FAIL  IFC models`: run `uv run fetch_models.py` again; it downloads only the missing or damaged files.
-- `harness.run` stops with `no task set`: the `--set` name is misspelt, or the questions are not in the clone yet; pull them (step 1 of the lecture day).
+- `harness.run` stops with `no task set`: the `--set` name is misspelt, or the questions are not in the clone yet.
+  Get them with step 1 of the lecture day.
 - A rate limit (`TooManyRequestsResponseError` or code 429): all groups share one key, so OpenRouter may refuse calls for a moment.
   The harness waits and retries by itself, up to five times over about a minute.
   If the run still ends with status `error` and the error names a rate limit or 429, wait a minute and start the same command again.
   The new run gets the next run id; hand in both.
 - `git push` asks for a password: GitHub does not accept the account password there.
   Git for Windows opens a browser window to sign in.
-  On macOS and Linux, create a personal access token on GitHub (Settings, Developer settings, Personal access tokens, Tokens (classic), scope `repo`) and paste it as the password.
+  On macOS and Linux, create a token on GitHub: Settings, Developer settings, Personal access tokens, Tokens (classic), Generate new token (classic), scope `repo`.
+  Give the GitHub user name as the user name and paste the token as the password.
+  The terminal shows nothing while the token is pasted.
 - The check of the pull request fails: open Details next to the check on the pull request page.
   Each `FAIL` line names the folder and the problem.
   A pull request may only add files in `submissions/<group>/`; remove anything else, commit and push again.
-
-## Handing in a run
-
-The answer key is not in this repository: GitHub scores the runs after the lecturer merges them.
-
-1. Check the hand-in folders.
-   The last line reads `0 problem(s)`.
-
-   ```
-   uv run python -m harness.submission
-   ```
-
-2. Commit the group's folder and push it to the fork, with the group name in place of `g07`:
-
-   ```
-   git add submissions/g07
-   git commit -m "g07: single on n05"
-   git push
-   ```
-
-3. Open a pull request: on the fork's GitHub page, press Contribute, then Open pull request, then Create pull request.
-   Its check passes (green tick) when the pull request only adds hand-in folders and each folder is complete.
-
-4. The lecturer merges the pull requests during the lecture.
-   After each merge, GitHub scores every hand-in into `results/runs.csv` and `results/plot.png` on the `main` branch of this repository.
-
-One pull request can carry several runs.
-Push more commits to it until it is merged, then open a new pull request for later runs.
 
 ## Rules
 
