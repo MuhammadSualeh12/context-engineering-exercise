@@ -10,7 +10,9 @@ Three agent strategies answer questions about IFC building models, and the class
 - The orchestrator (`--strategy orchestrator`) cannot run Python. It starts one ifc-worker subagent per IFC file, and each ifc-worker answers its questions in its own context.
 
 Every agent, each ifc-worker included, has a context cap of 48000 tokens.
-Real models have context windows of up to 1M tokens; the exercise caps them at 48000 tokens to save time and cost, and the principle is the same.
+Real models have context windows of up to 1M tokens.
+The exercise caps them at 48000 tokens to save time and cost.
+The principle is the same.
 
 Each student runs the exercise alone, on their own laptop.
 
@@ -151,7 +153,8 @@ The Command Prompt (cmd) cannot run the key command of the lecture day.
    uv run python -m harness.run --strategy single --set n05 --user <github-user> --submit-dir submissions
    ```
 
-   Without a GitHub account, any short name works for `--user`, and `--submit-dir submissions` can be left out.
+   Without a GitHub account, any short name works for `--user`.
+   Keep `--submit-dir submissions` so the run can still be handed in later.
    Keep the command on one line: PowerShell does not accept the backslash line breaks of macOS and Linux.
    In the instructor's pilot a run took from a few seconds (`n01`) to about seven minutes (`n20` and `n40`).
 
@@ -192,7 +195,7 @@ In an orchestrator run, the calls of each ifc-worker appear indented under the `
 ## Handing in a run
 
 The answer key is not in this repository: GitHub scores the runs after the lecturer merges them.
-Handing in needs a GitHub account, a clone of a fork (step 3 of the setup) and git's name and email (step 1 of the setup).
+Handing in needs a GitHub account, a fork (step 3 of the setup, or the section "Handing in from a direct clone") and git's name and email (step 1 of the setup).
 
 1. Check the hand-in folders:
 
@@ -200,7 +203,7 @@ Handing in needs a GitHub account, a clone of a fork (step 3 of the setup) and g
    uv run python -m harness.submission
    ```
 
-   The last line reads `0 problem(s)`.
+   The last line ends with `0 problem(s)`.
 
 2. Commit the folder and push it to the fork, with the GitHub user name in place of `<github-user>`:
 
@@ -229,14 +232,15 @@ git remote rename origin upstream
 git remote add origin https://github.com/<github-user>/context-engineering-exercise.git
 ```
 
-Then commit the hand-in folder as in step 2 above and push it once with:
+Then run `git add` and `git commit` as in step 2 above, and instead of `git push`, run once:
 
 ```
+git pull --no-rebase --no-edit origin main
 git push -u origin main
 ```
 
 After that, a plain `git push` works, and the pull request is opened as in step 3 above.
-`git pull upstream main` gets later changes of this repository.
+`git pull --no-rebase --no-edit upstream main` gets later changes of this repository.
 
 ## How a run ends
 
