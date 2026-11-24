@@ -6,7 +6,8 @@ The harness writes one JSON object per line for every model call of a run, to `r
 ## Fields
 
 - `run_id` (string): the run's id, the same on every line of the run, for example `g07-orchestrator-n20-1`.
-- `agent` (string): `single` for the agent of a single-agent or smart-compaction run; in an orchestrator run, `orchestrator` for the orchestrator and `subagent` for every ifc-worker.
+- `agent` (string): `single` for the agent of a single-agent run, `compaction` for the agent of a smart-compaction run; in an orchestrator run, `orchestrator` for the orchestrator and `subagent` for every ifc-worker.
+  Logs written before 2026-11-24 name the agent of a smart-compaction run `single`; `score.py` still accepts them.
 - `call_index` (integer): the call's position in the run, counted from 1 across all agents.
 - `model` (string): the OpenRouter model id the call went to, for example `deepseek/deepseek-v4.1-flash-1017`.
 - `input_tokens` (integer): prompt tokens of the call, cached tokens included.

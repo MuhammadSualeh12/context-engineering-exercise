@@ -69,7 +69,7 @@ def test_usage_log_follows_the_documented_schema(tmp_path, strategy):
         assert all(isinstance(r[k], t) for k, t in score.USAGE_FIELDS.items())
         assert r["run_id"] == "t-" + strategy and r["cost_usd"] == 0.0001 and r["cached_tokens"] > 0
     agents = {r["agent"] for r in rows}
-    assert agents == ({"orchestrator", "subagent"} if strategy == "orchestrator" else {"single"})
+    assert agents == ({"orchestrator", "subagent"} if strategy == "orchestrator" else {strategy})
     calls, warnings = score.load_usage(out / f"t-{strategy}.usage.jsonl", None)
     assert len(calls) == len(rows) == meta["calls"] and not warnings
 
@@ -110,6 +110,14 @@ def test_compaction_warns_past_the_threshold_and_drops_old_tool_results(tmp_path
     final = fake_model.SEEN_MESSAGES[-1]
     assert not [m for m in final if isinstance(m, HumanMessage) and "CONTEXT WARNING" in m.content]
     assert [m for m in final if isinstance(m, ToolMessage) and m.content == DROPPED]
+
+
+def test_the_compaction_agent_is_named_compaction_in_trace_events_and_page(tmp_path):
+    _, out = fake_run(tmp_path, "compaction", task_set=N01, threshold=400, python_calls=3, code="print('x' * 2000)")
+    trace = lines(out / "t-compaction.trace.jsonl")
+    assert {r["agent"] for r in trace} == {"compaction"}
+    html = (out / "trace.html").read_text(encoding="utf-8")
+    assert "compaction" in html and ">single<" not in html and " single " not in html
 
 
 def test_summarise_history_replaces_the_history_with_the_summary(tmp_path):

@@ -197,6 +197,19 @@ def test_usage_log_bad_lines_are_skipped_with_a_warning(files, tmp_path, capsys)
     assert list(csv.DictReader(out.open()))[0]["n_calls"] == "1"
 
 
+def test_usage_log_of_a_compaction_run_counts_its_agent_old_and_new_name(files, tmp_path, capsys):
+    key, answers, task = files
+    usage = tmp_path / "usage.jsonl"
+    # the agent is "compaction" from now on; the pilot logs of the instructor still say "single"
+    usage.write_text("".join(json.dumps(dict(USAGE[0], agent=a, call_index=i)) + "\n"
+                             for i, a in enumerate(["compaction", "single"], 1)), encoding="utf-8")
+    out = tmp_path / "runs.csv"
+    score.main([str(answers), str(key), "--set", str(task), "--usage", str(usage), "--csv", str(out),
+                "--strategy", "compaction"])
+    assert "is not one of" not in capsys.readouterr().err
+    assert list(csv.DictReader(out.open()))[0]["n_calls"] == "2"
+
+
 def test_usage_log_with_two_run_ids_needs_run_id(files, tmp_path):
     key, answers, task = files
     usage = tmp_path / "usage.jsonl"

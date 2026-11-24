@@ -10,7 +10,7 @@ from langchain_core.callbacks import BaseCallbackHandler
 from langchain_core.messages import AIMessage
 
 TEXT_LIMIT = 2000
-USAGE_AGENT = {"single": "single", "orchestrator": "orchestrator"}  # any other name is a subagent
+USAGE_AGENT = {"single": "single", "compaction": "compaction", "orchestrator": "orchestrator"}  # any other: subagent
 
 
 def short(value, limit: int = TEXT_LIMIT) -> str:
@@ -37,8 +37,9 @@ def scope(metadata: dict) -> str:
 class Recorder(BaseCallbackHandler):
     """Passed once in the run config; LangChain hands it down to every subagent."""
 
-    def __init__(self, run_id: str, model: str, usage_path: Path, trace_path: Path):
+    def __init__(self, run_id: str, model: str, usage_path: Path, trace_path: Path, main_agent: str = "single"):
         self.run_id, self.model = run_id, model
+        self.main_agent = main_agent  # the name of the strategy's main agent: single, compaction or orchestrator
         self.usage_path, self.trace_path = usage_path, trace_path
         self.lock = threading.Lock()  # parallel subagents call back from several threads
         self.started: dict = {}
@@ -54,11 +55,11 @@ class Recorder(BaseCallbackHandler):
         with path.open("a", encoding="utf-8") as fh:
             fh.write(json.dumps(record, ensure_ascii=False) + "\n")
 
-    def event(self, kind: str, agent: str = "single", **data) -> None:
+    def event(self, kind: str, agent: str | None = None, **data) -> None:
         """A harness event for the trace: a compaction step, the run's start or end."""
         with self.lock:
             self.failures["context_overflows"] += kind == "context_overflow"  # agents stopped by --context-cap
-            self._append(self.trace_path, {"type": "event", "kind": kind, "agent": agent, "time": now_iso(), **data})
+            self._append(self.trace_path, {"type": "event", "kind": kind, "agent": agent or self.main_agent, "time": now_iso(), **data})
 
     def on_chat_model_start(self, serialized, messages, *, run_id, metadata=None, **kwargs):
         metadata = metadata or {}
@@ -76,7 +77,7 @@ class Recorder(BaseCallbackHandler):
         message = response.generations[0][0].message
         usage = message.usage_metadata or {}
         meta = message.response_metadata or {}
-        agent = start["metadata"].get("lc_agent_name") or "single"
+        agent = start["metadata"].get("lc_agent_name") or self.main_agent
         cached = (usage.get("input_token_details") or {}).get("cache_read") or 0
         cost = meta.get("cost")
         with self.lock:
@@ -101,7 +102,7 @@ class Recorder(BaseCallbackHandler):
         start = self.started.pop(run_id, None) or {"time": now_iso(), "metadata": {}}
         with self.lock:
             self.failures["model_errors"] += 1
-        self.event("model_error", agent=start["metadata"].get("lc_agent_name") or "single",
+        self.event("model_error", agent=start["metadata"].get("lc_agent_name") or self.main_agent,
                    scope=scope(start["metadata"]), error=short(repr(error), 500))
 
     def on_tool_start(self, serialized, input_str, *, run_id, metadata=None, inputs=None, **kwargs):
@@ -121,7 +122,7 @@ class Recorder(BaseCallbackHandler):
                 self.failures["python_errors"] += "Traceback (most recent call last)" in text
                 self.failures["python_timeouts"] += text.startswith("TimeoutError: the code ran longer")
             self._append(self.trace_path, {
-                "type": "tool", "agent": start["metadata"].get("lc_agent_name") or "single", "scope": scope(start["metadata"]),
+                "type": "tool", "agent": start["metadata"].get("lc_agent_name") or self.main_agent, "scope": scope(start["metadata"]),
                 # a task call's own namespace is the scope of the subagent it starts
                 "starts_scope": ns if start["name"] == "task" else None, "name": start["name"], "time": start["time"],
                 "latency_s": round(time.perf_counter() - start["t0"], 3), "args": short(start["args"]),

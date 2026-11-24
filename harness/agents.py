@@ -101,7 +101,7 @@ def build_agent(strategy: str, llm, log_event=None, threshold: int = THRESHOLD, 
     if strategy == "compaction":
         budget = ContextBudget(threshold, log_event)
         return create_deep_agent(llm, tools=[make_python_tool()], system_prompt=COMPACTION_PROMPT,
-                                 middleware=[budget, *model_middleware("single")], name="single")
+                                 middleware=[budget, *model_middleware("compaction")], name="compaction")
     if strategy == "orchestrator":
         # A subagent spec does not inherit the main agent's middleware, so the worker gets its own retry and cap.
         worker = {"name": WORKER, "system_prompt": WORKER_PROMPT, "tools": [make_python_tool()],

@@ -41,7 +41,7 @@ NUMBER = re.compile(r"^\s*([-+]?(?:\d+(?:[.,]\d*)?|[.,]\d+)(?:[eE][-+]?\d+)?)\s*
 BARE_LETTER = re.compile(r"^\(?([A-Da-d])\)?\.?$")
 LETTER_TEXT = re.compile(r"^\(?([A-Da-d])(?:\)|\.|:|\)\.)\s+(.+)$", re.S)
 STRATEGIES = ["single", "compaction", "orchestrator"]
-AGENTS = {"orchestrator", "subagent", "single"}
+AGENTS = {"single", "compaction", "orchestrator", "subagent"}  # "single" also in compaction runs logged before the rename
 CATEGORIES = [1, 2, 3, 4]
 RUN_FIELDS = ["run_id", "group", "model", "strategy", "task_set", "n_questions", "n_correct", "accuracy",
               *(f"cat{c}_correct" for c in CATEGORIES), "n_calls", "input_tokens", "cached_tokens", "output_tokens",

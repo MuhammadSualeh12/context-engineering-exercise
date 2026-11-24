@@ -13,21 +13,24 @@ from pathlib import Path
 
 CSS = """
 body { font: 14px/1.4 system-ui, sans-serif; margin: 1.5em auto; max-width: 70em; padding: 0 1em; color: #222; }
-h1 { font-size: 1.3em; margin-bottom: .2em; }
+h1 { font-size: 1.3em; margin-bottom: .2em; overflow-wrap: anywhere; }
+.scroll { overflow-x: auto; }
 table { border-collapse: collapse; margin: .8em 0; }
 td, th { padding: .2em .8em; text-align: right; border-bottom: 1px solid #ddd; }
 th:first-child, td:first-child { text-align: left; }
 details { margin: .15em 0; }
-summary { cursor: pointer; display: flex; gap: .8em; align-items: center; white-space: nowrap; }
-summary .what { width: 13em; overflow: hidden; text-overflow: ellipsis; }
-.num { font-variant-numeric: tabular-nums; width: 7em; text-align: right; color: #555; }
-.bar { flex: 1; height: .8em; background: #eee; position: relative; min-width: 8em; }
+summary { cursor: pointer; display: flex; flex-wrap: wrap; gap: .1em .8em; align-items: center; }
+summary .what { flex: 0 1 15em; min-width: 9em; overflow-wrap: anywhere; }
+.num { font-variant-numeric: tabular-nums; flex: 0 1 7em; min-width: 4.5em; text-align: right; color: #555; }
+.tool .num { margin-left: auto; }
+.bar { flex: 1 1 3em; height: .8em; background: #eee; position: relative; min-width: 3em; }
 .bar span { position: absolute; top: 0; bottom: 0; left: 0; }
 .bar .input { background: #7aa6d8; } .bar .cached { background: #2f5f99; }
 .call > summary { font-weight: 600; }
 .tool > summary { color: #555; padding-left: 1.2em; }
 .sub { margin: .3em 0 .6em 1.8em; padding-left: .8em; border-left: 3px solid #c9a227; }
-.event { margin: .3em 0; padding: .2em .6em; background: #fff3cd; border-left: 3px solid #e0a800; }
+.event { margin: .3em 0; padding: .2em .6em; background: #fff3cd; border-left: 3px solid #e0a800; overflow-wrap: anywhere; }
+.event .who { color: #555; margin-right: .4em; }
 .event.error { background: #f8d7da; border-color: #c82333; }
 pre { white-space: pre-wrap; word-break: break-word; background: #f6f6f6; padding: .5em; margin: .3em 0 .3em 1.2em;
       max-height: 30em; overflow: auto; font-size: 12px; }
@@ -46,6 +49,23 @@ def read_trace(run_dir: Path) -> tuple[dict, list[dict]]:
     trace = next(run_dir.glob("*.trace.jsonl"), None)
     records = [json.loads(line) for line in trace.read_text(encoding="utf-8").splitlines() if line.strip()] if trace else []
     return meta, sorted(records, key=lambda r: r["time"])
+
+
+def agent_names(meta: dict, records: list[dict]) -> list[dict]:
+    """Traces written before the rename call the agent of a compaction run "single"; show it as "compaction"."""
+    strategy = meta.get("strategy") or next((r.get("strategy") for r in records if r.get("kind") == "run_start"), None)
+    if strategy != "compaction":
+        return records
+    return [{**r, "agent": "compaction"} if r.get("agent") == "single" else r for r in records]
+
+
+def duration(seconds: float) -> str:
+    """Milliseconds under a second, so a fast python call does not read as 0.0 s."""
+    if seconds < 0.0005:
+        return "&lt;1 ms"
+    if seconds < 1:
+        return f"{seconds * 1000:.0f} ms"
+    return f"{seconds:.1f} s"
 
 
 def totals_by_agent(calls: list[dict]) -> dict:
@@ -71,23 +91,63 @@ def render_call(c: dict, max_input: int) -> str:
     out = c["output"]
     body += f"<div class='role'>reply</div>{pre(out['content'] or '(no text)')}"
     body += "".join(f"<div class='role'>calls {escape(t['name'])}</div>{pre(t['args'])}" for t in out.get("tool_calls", []))
-    calls = ", ".join(t["name"] for t in out.get("tool_calls", [])) or "reply"
+    names = [t["name"] for t in out.get("tool_calls", [])]
+    calls = ", ".join(escape(name) + (f" &times; {names.count(name)}" if names.count(name) > 1 else "")
+                      for name in dict.fromkeys(names)) or "reply"
     return (f"<details class='call'><summary><span class='what'>#{c['call_index']} {escape(c['agent'])} "
-            f"&rarr; {escape(calls)}</span>"
+            f"&rarr; {calls}</span>"
             f"<span class='bar' title='input tokens, cached part dark'><span class='input' style='width:{width:.1f}%'>"
             f"</span><span class='cached' style='width:{cached:.1f}%'></span></span>"
             f"<span class='num'>{c['input_tokens']:,} in</span><span class='num'>{c['cached_tokens']:,} cached</span>"
             f"<span class='num'>{c['output_tokens']:,} out</span><span class='num'>{cost}</span>"
-            f"<span class='num'>{c['latency_s']:.1f} s</span></summary>"
+            f"<span class='num'>{duration(c['latency_s'])}</span></summary>"
             f"<div>{c['n_messages']} messages sent; new since the agent's last reply:</div>{body}</details>")
 
 
+def n(value) -> str:
+    return f"{value:,}" if isinstance(value, (int, float)) else str(value)
+
+
+def event_text(e: dict) -> str | None:
+    """One sentence per harness event; None for a kind this page does not know."""
+    g = e.get
+    kind = e["kind"]
+    if kind == "run_start":
+        parts = [f"Run started: {g('strategy')} on {g('task_set')} ({g('n_questions')} questions) with {g('model')}"]
+        if g("threshold"):
+            parts.append(f"compaction threshold {n(g('threshold'))} tokens")
+        parts.append(f"context cap {n(g('context_cap'))} tokens" if g("context_cap") else "no context cap")
+        return ", ".join(parts)
+    if kind == "run_end":
+        text = f"Run ended with status {g('status')} after {g('wall_seconds')} s"
+        return text + (f": {g('error')}" if g("error") else "")
+    if kind == "warning":
+        return f"Warning at {n(g('tokens'))} tokens, over the compaction threshold of {n(g('threshold'))}"
+    if kind == "drop_old_tool_results":
+        return (f"Dropped {n(g('dropped'))} old tool results at {n(g('tokens_before'))} tokens, "
+                f"kept the last {n(g('keep_last'))}")
+    if kind == "summarise_history":
+        return f"At {n(g('tokens_before'))} tokens, {n(g('removed'))} messages replaced by a summary:"
+    if kind == "auto_compaction":
+        return (f"Hard limit of {n(g('hard_limit'))} tokens passed at {n(g('tokens_before'))} tokens: "
+                f"dropped {n(g('dropped'))} old tool results without the agent")
+    if kind == "context_overflow":
+        return (f"Context cap of {n(g('cap'))} tokens reached: the next call would send {n(g('tokens'))} tokens, "
+                "so the agent stops")
+    if kind == "model_error":
+        return f"Model call failed: {g('error')}"
+    return None
+
+
 def render_event(e: dict) -> str:
-    details = {k: v for k, v in e.items() if k not in ("type", "kind", "agent", "time", "scope")}
-    text = ", ".join(f"{k}={v}" for k, v in details.items() if v not in (None, "") and k != "summary")
+    text = event_text(e)
+    if text is None:  # a kind added later: its name and data as they are
+        details = {k: v for k, v in e.items() if k not in ("type", "kind", "agent", "time", "scope", "summary")}
+        text = f"{e['kind']}: " + ", ".join(f"{k} {v}" for k, v in details.items() if v not in (None, ""))
     summary = pre(e["summary"]) if e.get("summary") else ""
-    error = " error" if e["kind"] in ("model_error",) or e.get("status") not in (None, "ok") else ""
-    return f"<div class='event{error}'>&#9873; {escape(e['kind'])} ({escape(e['agent'])}) {escape(text)}{summary}</div>"
+    error = " error" if e["kind"] in ("model_error", "context_overflow") or e.get("status") not in (None, "ok") else ""
+    who = "" if e["kind"] in ("run_start", "run_end") else f"<span class='who'>{escape(e['agent'])}</span>"
+    return f"<div class='event{error}'>&#9873; {who}{escape(text)}{summary}</div>"
 
 
 def render_scope(records: list[dict], scope: str, max_input: int) -> str:
@@ -101,8 +161,8 @@ def render_scope(records: list[dict], scope: str, max_input: int) -> str:
             parts.append(render_event(r))
         else:
             mark = "failed " if r["failed"] else ""
-            parts.append(f"<details class='tool'><summary><span>&#9881; {mark}{escape(r['name'])}</span>"
-                         f"<span class='num'>{r['latency_s']:.1f} s</span></summary>"
+            parts.append(f"<details class='tool'><summary><span class='what'>&#9881; {mark}{escape(r['name'])}</span>"
+                         f"<span class='num'>{duration(r['latency_s'])}</span></summary>"
                          f"<div class='role'>args</div>{pre(r['args'])}<div class='role'>result</div>{pre(r['result'])}"
                          "</details>")
             if r.get("starts_scope"):
@@ -112,6 +172,7 @@ def render_scope(records: list[dict], scope: str, max_input: int) -> str:
 
 
 def render(meta: dict, records: list[dict]) -> str:
+    records = agent_names(meta, records)
     calls = [r for r in records if r["type"] == "call"]
     agents = totals_by_agent(calls)
     total = {k: sum(a[k] for a in agents.values()) for k in ("calls", "input_tokens", "cached_tokens", "output_tokens",
@@ -128,10 +189,10 @@ def render(meta: dict, records: list[dict]) -> str:
                f"{meta.get('wall_seconds', '?')} s wall time</div>")
     if meta.get("error"):
         heading += f"<div class='event error'>{escape(meta['error'])}</div>"
-    table = (f"<table><tr><th>agent</th><th>calls</th><th>input</th><th>cached</th><th>output</th><th>cost</th>"
+    table = (f"<div class='scroll'><table><tr><th>agent</th><th>calls</th><th>input</th><th>cached</th><th>output</th><th>cost</th>"
              f"<th>model time</th></tr>{rows}<tr><th>total</th><th>{total['calls']}</th><th>{total['input_tokens']:,}</th>"
              f"<th>{total['cached_tokens']:,}</th><th>{total['output_tokens']:,}</th><th>${total['cost_usd']:.4f}</th>"
-             "<th></th></tr></table>")
+             "<th></th></tr></table></div>")
     buttons = "<button onclick='toggleAll(true)'>expand all</button> <button onclick='toggleAll(false)'>collapse all</button>"
     max_input = max((c["input_tokens"] for c in calls), default=1) or 1
     return (f"<!doctype html><html><head><meta charset='utf-8'><title>{escape(meta.get('run_id', 'trace'))}</title>"

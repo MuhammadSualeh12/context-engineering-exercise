@@ -109,7 +109,7 @@ def run(strategy: str, set_path: Path, model: str, group: str, run_id: str, thre
     for path in files.values():
         path.write_text("", encoding="utf-8")
 
-    recorder = Recorder(run_id, model, files["usage"], files["trace"])
+    recorder = Recorder(run_id, model, files["usage"], files["trace"], main_agent=strategy)
     meta = {"run_id": run_id, "group": group, "strategy": strategy, "task_set": task.get("name", set_path.stem),
             "n_questions": len(ids), "model": model, "threshold": threshold if strategy == "compaction" else None,
             "context_cap": context_cap, "started": now_iso()}
