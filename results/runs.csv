@@ -1,0 +1,1 @@
+run_id,group,model,strategy,task_set,n_questions,n_correct,accuracy,cat1_correct,cat2_correct,cat3_correct,cat4_correct,n_calls,input_tokens,cached_tokens,output_tokens,cost_usd,wall_seconds,answers_file,usage_file,status,n_answered,threshold,context_cap,model_errors,invalid_tool_calls,tool_errors,python_errors,python_timeouts,context_overflows
