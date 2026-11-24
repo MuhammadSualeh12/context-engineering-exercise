@@ -23,15 +23,15 @@ pytestmark = pytest.mark.skipif(not (SETS / "n05.json").exists(), reason="questi
 
 @pytest.fixture
 def class_room(tmp_path):
-    """Three hand-ins from two groups, one of them a failed run, one broken folder, and a key where every answer is 0."""
+    """Three hand-ins from two students, one of them a failed run, one broken folder, and a key where every answer is 0."""
     subs = tmp_path / "submissions"
-    for group, strategy, set_name, model in (("g01", "single", "n05", {}), ("g02", "orchestrator", "n05", {}),
-                                             ("g02", "single", "n01", {"python_calls": 3, "fail_after": 1})):
+    for user, strategy, set_name, model in (("ana", "single", "n05", {}), ("ben", "orchestrator", "n05", {}),
+                                             ("ben", "single", "n01", {"python_calls": 3, "fail_after": 1})):
         fake_model.SEEN_TOOLS.clear()
         fake_model.SEEN_MESSAGES.clear()
-        run(strategy, SETS / f"{set_name}.json", "fake/model", group, f"{group}-{strategy}-{set_name}-1", 40_000,
+        run(strategy, SETS / f"{set_name}.json", "fake/model", user, f"{user}-{strategy}-{set_name}-1", 40_000,
             llm=ScriptedModel(**model), runs_dir=tmp_path / "runs", submit_dir=subs)
-    (subs / "g03" / "g03-single-n05-1").mkdir(parents=True)
+    (subs / "cem" / "cem-single-n05-1").mkdir(parents=True)
     ids = json.loads((SETS / "n05.json").read_text(encoding="utf-8"))["ids"]
     key = tmp_path / "key.jsonl"
     key.write_text("".join(json.dumps({"id": i, "type": "integer", "answer": 0, "category": 2}) + "\n"
@@ -47,18 +47,18 @@ def test_every_valid_hand_in_becomes_one_row(class_room, capsys):
         reader = csv.DictReader(fh)
         rows = list(reader)
     assert reader.fieldnames == score.RUN_FIELDS + results.META_FIELDS
-    assert [r["run_id"] for r in rows] == ["g01-single-n05-1", "g02-orchestrator-n05-1", "g02-single-n01-1"]
+    assert [r["run_id"] for r in rows] == ["ana-single-n05-1", "ben-orchestrator-n05-1", "ben-single-n01-1"]
     ok, orch, failed = rows
     assert ok["accuracy"] == "1.0000" and ok["status"] == "ok" and int(ok["n_calls"]) > 0
     assert failed["status"] == "error" and failed["model_errors"] == "1" and failed["accuracy"] == "0.0000"
     out = capsys.readouterr().out
-    assert "skipped: g03/g03-single-n05-1: missing" in out and "3 runs from 2 group(s)" in out
+    assert "skipped: cem/cem-single-n05-1: missing" in out and "3 runs from 2 student(s)" in out
     assert "expected" not in out
 
 
 def test_the_context_cap_and_its_overflows_are_columns(tmp_path):
     subs = tmp_path / "submissions"
-    run("single", SETS / "n05.json", "fake/model", "g01", "g01-single-n05-1", 40_000, runs_dir=tmp_path / "runs",
+    run("single", SETS / "n05.json", "fake/model", "ana", "ana-single-n05-1", 40_000, runs_dir=tmp_path / "runs",
         llm=ScriptedModel(python_calls=4, code="print('x' * 3900)"), submit_dir=subs, context_cap=3000)
     key = tmp_path / "key.jsonl"
     key.write_text("".join(json.dumps({"id": i, "type": "integer", "answer": 0, "category": 2}) + "\n"

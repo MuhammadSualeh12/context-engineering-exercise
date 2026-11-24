@@ -3,7 +3,7 @@
 Usage:
     uv run --with matplotlib==3.11.2 python results.py --key KEY.jsonl [--submissions submissions] [--out results]
 
-Each folder submissions/<group>/<run-id>/ (harness/submission.py) is checked, then scored with score.py against
+Each folder submissions/<user>/<run-id>/ (harness/submission.py) is checked, then scored with score.py against
 KEY.jsonl, the answer key the workflow decodes from a repository secret.
 Writes <out>/runs.csv, one row per run with score.py's run columns followed by the run's status and failure
 counts from run.json, and <out>/plot.png: accuracy against total tokens per run, and total tokens and wall time
@@ -43,7 +43,7 @@ def score_hand_in(folder: Path, key: dict, sets_dir: Path) -> dict:
     run_id = folder.name
     _results, row, _warnings = score.score_run(folder / f"{run_id}.answers.jsonl", key, task["ids"],
                                                task.get("name", meta["task_set"]), folder / f"{run_id}.usage.jsonl",
-                                               run_id, meta["strategy"], meta["group"], meta["model"])
+                                               run_id, meta["strategy"], submission.owner(meta), meta["model"])
     row.update({k: meta.get(k, "") if meta.get(k) is not None else "" for k in META_FIELDS})
     return row
 
@@ -57,7 +57,7 @@ def score_all(submissions: Path, key_path: Path, sets_dir: Path) -> tuple[list[d
             problems += errors
             continue
         rows.append(score_hand_in(folder, key, sets_dir))
-    rows.sort(key=lambda r: (r["model"], r["group"], r["run_id"]))
+    rows.sort(key=lambda r: (r["model"], r["user"], r["run_id"]))
     return rows, problems
 
 
@@ -177,8 +177,8 @@ def main(argv: list[str] | None = None) -> int:
     write_csv(rows, args.out / "runs.csv")
     if not args.no_plot:
         plot(rows, args.out / "plot.png")
-    groups = len({r["group"] for r in rows})
-    print(f"{len(rows)} runs from {groups} group(s) scored into {args.out / 'runs.csv'}"
+    users = len({r["user"] for r in rows})
+    print(f"{len(rows)} runs from {users} student(s) scored into {args.out / 'runs.csv'}"
           f"{'' if args.no_plot else ' and plot.png'}; {len(problems)} problem(s)")
     return 0
 

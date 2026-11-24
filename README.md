@@ -10,23 +10,29 @@ Three agent strategies answer questions about IFC building models, and the class
 - The orchestrator (`--strategy orchestrator`) cannot run Python. It starts one ifc-worker subagent per IFC file, and each ifc-worker answers its questions in its own context.
 
 Every agent, each ifc-worker included, has a context cap of 48000 tokens.
+Real models have context windows of up to 1M tokens; the exercise caps them at 48000 tokens to save time and cost, and the principle is the same.
+
+Each student runs the exercise alone, on their own laptop.
 
 ## Before the lecture
 
 The setup takes about 15 minutes, most of it downloads, so do it the evening before.
-It needs a GitHub account, about 1 GB of free disk space and the OpenRouter key handed out for the lecture.
+It needs about 1 GB of free disk space.
+A GitHub account is needed only to hand in runs.
+The OpenRouter key is posted on Moodle on the morning of the lecture.
 The commands work in PowerShell on Windows and in the terminal on macOS and Linux.
 On Windows, use PowerShell.
-The Command Prompt (cmd) cannot run the key command of step 6.
+The Command Prompt (cmd) cannot run the key command of the lecture day.
 
-1. Check that git is installed:
+1. Check that git works:
 
    ```
    git --version
    ```
 
    If the command is not found, install git: on Windows from https://git-scm.com/downloads/win with the default options; on macOS with `xcode-select --install`, or by accepting the dialog that `git --version` opens; on Linux with the package manager (for example `sudo apt install git`).
-   Close the terminal and open a new one, then give git a name and an email for the commits, once per laptop:
+   Then close the terminal and open a new one.
+   To hand in runs, also give git a name and an email for the commits, once per laptop:
 
    ```
    git config --global user.name "Firstname Lastname"
@@ -52,25 +58,69 @@ The Command Prompt (cmd) cannot run the key command of step 6.
    uv --version
    ```
 
-3. Fork this repository: press Fork at the top right of this page, then Create fork.
-   The fork is a copy of the repository under the student's own GitHub account.
-   Runs are handed in from the fork by pull request.
+3. Clone the repository and go into its folder.
+   To follow along without handing in runs, clone this repository directly:
 
-4. Clone the fork and go into its folder, with the GitHub user name in place of `<github-user>`:
+   ```
+   git clone https://github.com/sylvainHellin/context-engineering-exercise.git
+   cd context-engineering-exercise
+   ```
+
+   To hand in runs, fork it first: press Fork at the top right of this page, then Create fork.
+   The fork is a copy of the repository under the student's own GitHub account, and runs are handed in from it by pull request.
+   Then clone the fork, with the GitHub user name in place of `<github-user>`:
 
    ```
    git clone https://github.com/<github-user>/context-engineering-exercise.git
    cd context-engineering-exercise
    ```
 
-5. Download the eleven IFC models (110 MB) into `models/`.
+   A direct clone can still hand in runs later (section "Handing in from a direct clone").
+
+4. Download the eleven IFC models (110 MB) into `models/`.
    The first `uv run` also installs Python and the packages, which takes a few minutes.
 
    ```
    uv run fetch_models.py
    ```
 
-6. Set the OpenRouter key.
+5. Check the setup without the key:
+
+   ```
+   uv run python -m harness.check --offline
+   ```
+
+   The last line reads `all checks passed`.
+   The check covers git, the packages, the IFC models and the agent harness; the key and the model call follow on the lecture morning.
+   Until then a line `note  questions:` says that the questions are not in the clone yet.
+   A line starting with `FAIL` names the problem; the section "When something fails" below lists the fixes.
+
+## On the lecture day
+
+1. Get the questions.
+   They are added to `questions/` in this repository on the morning of the lecture.
+   Open a terminal and go into the folder of the clone:
+
+   ```
+   cd context-engineering-exercise
+   ```
+
+   In a direct clone of this repository, run:
+
+   ```
+   git pull
+   ```
+
+   In a clone of a fork, run:
+
+   ```
+   git pull https://github.com/sylvainHellin/context-engineering-exercise.git main
+   ```
+
+   Pressing Sync fork on the fork's GitHub page and then running `git pull` in the clone does the same.
+   Until the questions are in, `harness.run` stops with `no task set`.
+
+2. Set the OpenRouter key, which the tutor posts on Moodle on the morning of the lecture.
    On Windows, in PowerShell:
 
    ```
@@ -86,7 +136,7 @@ The Command Prompt (cmd) cannot run the key command of step 6.
    The key holds only in this terminal window, so set it again in every new window.
    Never commit the key or paste it into an issue or a pull request.
 
-7. Check the setup.
+3. Check the setup once with the key.
    The check makes one model call, which costs a fraction of a cent.
 
    ```
@@ -94,47 +144,26 @@ The Command Prompt (cmd) cannot run the key command of step 6.
    ```
 
    The last line reads `all checks passed`.
-   A line starting with `FAIL` names the problem; the section "When something fails" below lists the fixes.
 
-## On the lecture day
-
-1. Get the questions.
-   They are added to `questions/` in this repository on the morning of the lecture.
-   Open a terminal and go into the folder of the clone:
+4. Run the strategy and the task set given in the lecture, with the GitHub user name in place of `<github-user>`:
 
    ```
-   cd context-engineering-exercise
+   uv run python -m harness.run --strategy single --set n05 --user <github-user> --submit-dir submissions
    ```
 
-   Then run:
-
-   ```
-   git pull https://github.com/sylvainHellin/context-engineering-exercise.git main
-   ```
-
-   Pressing Sync fork on the fork's GitHub page and then running `git pull` in the clone does the same.
-   Until the questions are in, `harness.run` stops with `no task set`.
-
-2. Set the OpenRouter key in the terminal window (step 6 above).
-
-3. Run the strategy and the task set assigned to the group, with the group name from the lecture:
-
-   ```
-   uv run python -m harness.run --strategy single --set n05 --group g07 --submit-dir submissions
-   ```
-
+   Without a GitHub account, any short name works for `--user`, and `--submit-dir submissions` can be left out.
    Keep the command on one line: PowerShell does not accept the backslash line breaks of macOS and Linux.
    In the instructor's pilot a run took from a few seconds (`n01`) to about seven minutes (`n20` and `n40`).
 
-4. Open the trace of the run (section "Reading the trace") and hand the run in (section "Handing in a run").
+5. Open the trace of the run (section "Reading the trace") and hand the run in (section "Handing in a run").
 
 ## Options of harness.run
 
 - `--strategy`: `single`, `compaction` or `orchestrator`.
 - `--set`: `n01`, `n05`, `n10`, `n20` or `n40`: 1 to 40 questions spread over the eleven IFC files.
   `single_4351_n05` and `single_4351_n10`: 5 or 10 questions on one file, `4351.ifc`.
-- `--group`: the group name from the lecture, for example `g07`.
-- `--submit-dir submissions`: also writes the hand-in folder `submissions/<group>/<run-id>/`.
+- `--user`: the GitHub user name, which starts the run id and names the hand-in folder; without a GitHub account any short name.
+- `--submit-dir submissions`: also writes the hand-in folder `submissions/<github-user>/<run-id>/`.
 - `--threshold`: the compaction threshold in tokens, 30000 by default, used by smart compaction only.
   At 1.5 times the threshold (45000 tokens) the harness drops old tool results itself, whatever the agent did with the warning.
 - `--context-cap`: the context cap of each agent in tokens, 48000 by default.
@@ -150,11 +179,11 @@ uv run python -m harness.run --help
 ## Reading the trace
 
 A run writes its files to `runs/<run-id>/`, which git ignores.
-The run id has the form `<group>-<strategy>-<set>-<n>`, for example `g07-single-n05-1`, and the run prints it at the end.
+The run id has the form `<github-user>-<strategy>-<set>-<n>`, for example `octocat-single-n05-1`, and the run prints it at the end.
 This command opens the trace in the browser:
 
 ```
-uv run python -m harness.view runs/g07-single-n05-1
+uv run python -m harness.view runs/octocat-single-n05-1
 ```
 
 The trace lists every model call and tool call in order, with its tokens, cost and time.
@@ -163,6 +192,7 @@ In an orchestrator run, the calls of each ifc-worker appear indented under the `
 ## Handing in a run
 
 The answer key is not in this repository: GitHub scores the runs after the lecturer merges them.
+Handing in needs a GitHub account, a clone of a fork (step 3 of the setup) and git's name and email (step 1 of the setup).
 
 1. Check the hand-in folders:
 
@@ -172,11 +202,11 @@ The answer key is not in this repository: GitHub scores the runs after the lectu
 
    The last line reads `0 problem(s)`.
 
-2. Commit the group's folder and push it to the fork, with the group name in place of `g07`:
+2. Commit the folder and push it to the fork, with the GitHub user name in place of `<github-user>`:
 
    ```
-   git add submissions/g07
-   git commit -m "g07: single on n05"
+   git add submissions/<github-user>
+   git commit -m "single on n05"
    git push
    ```
 
@@ -188,6 +218,25 @@ The answer key is not in this repository: GitHub scores the runs after the lectu
 
 One pull request can carry several runs.
 Push more commits to it until it is merged, then open a new pull request for later runs.
+
+### Handing in from a direct clone
+
+A direct clone of this repository cannot push to it.
+To hand in from such a clone, fork the repository on GitHub (Fork at the top right of this page, then Create fork) and point the clone at the fork, with the GitHub user name in place of `<github-user>`:
+
+```
+git remote rename origin upstream
+git remote add origin https://github.com/<github-user>/context-engineering-exercise.git
+```
+
+Then commit the hand-in folder as in step 2 above and push it once with:
+
+```
+git push -u origin main
+```
+
+After that, a plain `git push` works, and the pull request is opened as in step 3 above.
+`git pull upstream main` gets later changes of this repository.
 
 ## How a run ends
 
@@ -209,12 +258,13 @@ The same holds for every other status, since the results table shows each run's 
 ## When something fails
 
 - `uv` is not found after the install: close the terminal and open a new one.
-- `harness.check` prints `FAIL  API key`: the key is not set in this terminal window; set it (step 6 of the setup).
-- `harness.check` prints `FAIL  model call: UnauthorizedResponseError: User not found.`: the key is wrong or incomplete; copy it again and set it between the quotes.
+- `harness.check` prints `FAIL  git`: install git (step 1 of the setup), then close the terminal and open a new one.
 - `harness.check` prints `FAIL  IFC models`: run `uv run fetch_models.py` again; it downloads only the missing or damaged files.
+- `harness.check` prints `FAIL  API key`: the key is not set in this terminal window; set it (step 2 of the lecture day).
+- `harness.check` prints `FAIL  model call: UnauthorizedResponseError: User not found.`: the key is wrong or incomplete; copy it again from Moodle and set it between the quotes.
 - `harness.run` stops with `no task set`: the `--set` name is misspelt, or the questions are not in the clone yet.
   Get them with step 1 of the lecture day.
-- A rate limit (`TooManyRequestsResponseError` or code 429): all groups share one key, so OpenRouter may refuse calls for a moment.
+- A rate limit (`TooManyRequestsResponseError` or code 429): all students share one key, so OpenRouter may refuse calls for a moment.
   The harness waits and retries by itself, up to five times over about a minute.
   If the run still ends with status `error` and the error names a rate limit or 429, wait a minute and start the same command again.
   The new run gets the next run id; hand in both.
@@ -223,11 +273,12 @@ The same holds for every other status, since the results table shows each run's 
   On macOS and Linux, create a token on GitHub: Settings, Developer settings, Personal access tokens, Tokens (classic), Generate new token (classic), scope `repo`.
   Give the GitHub user name as the user name and paste the token as the password.
   The terminal shows nothing while the token is pasted.
+- `git push` fails with `Permission denied` or `403`: the clone points at this repository instead of a fork; see "Handing in from a direct clone".
 - The check of the pull request fails: open Details next to the check on the pull request page.
   Each `FAIL` line names the folder and the problem.
-  A pull request may only add files in `submissions/<group>/`; remove anything else, commit and push again.
+  A pull request may only add files in `submissions/<github-user>/`; remove anything else, commit and push again.
 
 ## Rules
 
 - The agent answers from the IFC files with its Python tool only, without web access.
-- A pull request changes nothing outside `submissions/<group>/`; the lecturer closes any other.
+- A pull request changes nothing outside `submissions/<github-user>/`; the lecturer closes any other.

@@ -20,30 +20,31 @@ N05 = SETS / "n05.json"
 pytestmark = pytest.mark.skipif(not N05.exists(), reason="questions/ is published on the lecture morning")
 
 
-def submitted(tmp_path, strategy="single", run_id="g07-single-n05-1", **model):
+def submitted(tmp_path, strategy="single", run_id="octocat-single-n05-1", **model):
     fake_model.SEEN_TOOLS.clear()
     fake_model.SEEN_MESSAGES.clear()
-    meta = run(strategy, N05, "fake/model", "g07", run_id, 40_000, llm=ScriptedModel(**model),
+    meta = run(strategy, N05, "fake/model", "octocat", run_id, 40_000, llm=ScriptedModel(**model),
                runs_dir=tmp_path / "runs", submit_dir=tmp_path / "submissions")
-    return meta, tmp_path / "submissions" / "g07" / run_id
+    return meta, tmp_path / "submissions" / "octocat" / run_id
 
 
 def test_a_run_writes_its_submission_folder(tmp_path):
     meta, folder = submitted(tmp_path)
-    assert sorted(p.name for p in folder.iterdir()) == ["g07-single-n05-1.answers.jsonl",
-                                                        "g07-single-n05-1.usage.jsonl", "run.json"]
-    assert (folder / "g07-single-n05-1.answers.jsonl").read_bytes() == \
-        (tmp_path / "runs" / "g07-single-n05-1" / "g07-single-n05-1.answers.jsonl").read_bytes()
+    assert sorted(p.name for p in folder.iterdir()) == ["octocat-single-n05-1.answers.jsonl",
+                                                        "octocat-single-n05-1.usage.jsonl", "run.json"]
+    assert (folder / "octocat-single-n05-1.answers.jsonl").read_bytes() == \
+        (tmp_path / "runs" / "octocat-single-n05-1" / "octocat-single-n05-1.answers.jsonl").read_bytes()
     saved = json.loads((folder / "run.json").read_text(encoding="utf-8"))
     assert saved["run_id"] == meta["run_id"] and saved["status"] == "ok"
+    assert saved["user"] == "octocat" and "group" not in saved
     assert meta["submission"] == folder.as_posix()
     assert submission.check_folder(folder, SETS) == []
 
 
 def test_free_run_id_skips_ids_already_submitted(tmp_path):
-    (tmp_path / "submissions" / "g07" / "g07-single-n05-1").mkdir(parents=True)
+    (tmp_path / "submissions" / "octocat" / "octocat-single-n05-1").mkdir(parents=True)
     (tmp_path / "runs").mkdir()
-    assert free_run_id("g07", "single", "n05", tmp_path / "runs", tmp_path / "submissions") == "g07-single-n05-2"
+    assert free_run_id("octocat", "single", "n05", tmp_path / "runs", tmp_path / "submissions") == "octocat-single-n05-2"
 
 
 def test_a_failed_run_is_still_a_valid_submission(tmp_path):
@@ -57,21 +58,21 @@ def rewrite(path: Path, rows: list) -> None:
 
 @pytest.mark.parametrize("damage, expected", [
     (lambda f: (f / "notes.txt").write_text("x"), "unexpected file notes.txt"),
-    (lambda f: (f / "g07-single-n05-1.usage.jsonl").unlink(), "missing g07-single-n05-1.usage.jsonl"),
-    (lambda f: rewrite(f / "g07-single-n05-1.answers.jsonl", ["{not json"]), "not valid JSON"),
-    (lambda f: rewrite(f / "g07-single-n05-1.answers.jsonl", [{"id": "q99", "answer": 1}]), "q99 is not in task set n05"),
-    (lambda f: rewrite(f / "g07-single-n05-1.answers.jsonl", [{"id": "q50"}]), "without id or answer"),
-    (lambda f: rewrite(f / "g07-single-n05-1.usage.jsonl", [{"run_id": "other"}]), "missing agent"),
-    (lambda f: (f / "run.json").write_text(json.dumps({"run_id": "g07-single-n05-1", "group": "g08", "strategy": "single",
+    (lambda f: (f / "octocat-single-n05-1.usage.jsonl").unlink(), "missing octocat-single-n05-1.usage.jsonl"),
+    (lambda f: rewrite(f / "octocat-single-n05-1.answers.jsonl", ["{not json"]), "not valid JSON"),
+    (lambda f: rewrite(f / "octocat-single-n05-1.answers.jsonl", [{"id": "q99", "answer": 1}]), "q99 is not in task set n05"),
+    (lambda f: rewrite(f / "octocat-single-n05-1.answers.jsonl", [{"id": "q50"}]), "without id or answer"),
+    (lambda f: rewrite(f / "octocat-single-n05-1.usage.jsonl", [{"run_id": "other"}]), "missing agent"),
+    (lambda f: (f / "run.json").write_text(json.dumps({"run_id": "octocat-single-n05-1", "user": "monalisa", "strategy": "single",
                                                         "task_set": "n05", "model": "m", "status": "ok"})),
-     "group g08 in run.json is not the folder's group g07"),
-    (lambda f: (f / "run.json").write_text(json.dumps({"run_id": "g07-single-n05-1", "group": "g07", "strategy": "magic",
+     "user monalisa in run.json is not the folder name octocat"),
+    (lambda f: (f / "run.json").write_text(json.dumps({"run_id": "octocat-single-n05-1", "user": "octocat", "strategy": "magic",
                                                         "task_set": "n05", "model": "m", "status": "ok"})),
      "strategy 'magic'"),
-    (lambda f: (f / "run.json").write_text(json.dumps({"run_id": "g07-single-n05-1", "group": "g07", "strategy": "single",
+    (lambda f: (f / "run.json").write_text(json.dumps({"run_id": "octocat-single-n05-1", "user": "octocat", "strategy": "single",
                                                         "task_set": "n99", "model": "m", "status": "ok"})),
      "unknown task set 'n99'"),
-    (lambda f: (f / "g07-single-n05-1.answers.jsonl").write_text("x" * (submission.MAX_BYTES + 1)), "larger than"),
+    (lambda f: (f / "octocat-single-n05-1.answers.jsonl").write_text("x" * (submission.MAX_BYTES + 1)), "larger than"),
 ])
 def test_check_folder_reports_each_problem(tmp_path, damage, expected):
     _, folder = submitted(tmp_path)
@@ -80,23 +81,33 @@ def test_check_folder_reports_each_problem(tmp_path, damage, expected):
     assert any(expected in e for e in errors), errors
 
 
+def test_a_hand_in_written_before_the_rename_to_user_still_passes(tmp_path):
+    # The pilot's hand-ins name the owner "group" in run.json.
+    _, folder = submitted(tmp_path)
+    meta = json.loads((folder / "run.json").read_text(encoding="utf-8"))
+    meta["group"] = meta.pop("user")
+    (folder / "run.json").write_text(json.dumps(meta), encoding="utf-8")
+    assert submission.check_folder(folder, SETS) == []
+    assert submission.owner(meta) == "octocat"
+
+
 def test_usage_lines_of_another_run_are_rejected(tmp_path):
     _, folder = submitted(tmp_path)
-    usage = folder / "g07-single-n05-1.usage.jsonl"
+    usage = folder / "octocat-single-n05-1.usage.jsonl"
     rows = [json.loads(line) for line in usage.read_text(encoding="utf-8").splitlines()]
-    rewrite(usage, [dict(rows[0], run_id="g07-single-n05-9")])
-    assert any("run_id g07-single-n05-9" in e for e in submission.check_folder(folder, SETS))
+    rewrite(usage, [dict(rows[0], run_id="octocat-single-n05-9")])
+    assert any("run_id octocat-single-n05-9" in e for e in submission.check_folder(folder, SETS))
 
 
 def test_check_changed_accepts_only_new_submission_files():
     folders, errors = submission.check_changed([
-        "A\tsubmissions/g07/g07-single-n05-1/run.json",
-        "A\tsubmissions/g07/g07-single-n05-1/g07-single-n05-1.answers.jsonl",
-        "submissions/g08/g08-orchestrator-n10-1/run.json",
+        "A\tsubmissions/octocat/octocat-single-n05-1/run.json",
+        "A\tsubmissions/octocat/octocat-single-n05-1/octocat-single-n05-1.answers.jsonl",
+        "submissions/monalisa/monalisa-orchestrator-n10-1/run.json",
     ])
-    assert errors == [] and folders == ["submissions/g07/g07-single-n05-1", "submissions/g08/g08-orchestrator-n10-1"]
-    _, errors = submission.check_changed(["M\tscore.py", "M\tsubmissions/g07/g07-single-n05-1/run.json",
-                                          "A\tsubmissions/g07/run.json", "D\tsubmissions/g09/g09-x-1/run.json",
+    assert errors == [] and folders == ["submissions/octocat/octocat-single-n05-1", "submissions/monalisa/monalisa-orchestrator-n10-1"]
+    _, errors = submission.check_changed(["M\tscore.py", "M\tsubmissions/octocat/octocat-single-n05-1/run.json",
+                                          "A\tsubmissions/octocat/run.json", "D\tsubmissions/hubot/hubot-x-1/run.json",
                                           "A\tsubmissions/../score.py/x/y"])
     assert len(errors) == 5, errors
 

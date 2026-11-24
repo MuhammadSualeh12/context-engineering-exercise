@@ -5,7 +5,7 @@ The harness writes one JSON object per line for every model call of a run, to `r
 
 ## Fields
 
-- `run_id` (string): the run's id, the same on every line of the run, for example `g07-orchestrator-n20-1`.
+- `run_id` (string): the run's id, the same on every line of the run, for example `octocat-orchestrator-n20-1`.
 - `agent` (string): `single` for the agent of a single-agent run, `compaction` for the agent of a smart-compaction run; in an orchestrator run, `orchestrator` for the orchestrator and `subagent` for every ifc-worker.
   Logs written before 2026-11-24 name the agent of a smart-compaction run `single`; `score.py` still accepts them.
 - `call_index` (integer): the call's position in the run, counted from 1 across all agents.
@@ -20,7 +20,7 @@ The harness writes one JSON object per line for every model call of a run, to `r
 ## Example line
 
 ```json
-{"run_id": "g07-orchestrator-n20-1", "agent": "subagent", "call_index": 4, "model": "deepseek/deepseek-v4.1-flash-1017", "input_tokens": 5120, "cached_tokens": 4096, "output_tokens": 312, "cost_usd": 0.00184, "latency_s": 3.42, "timestamp": "2026-11-26T10:15:03.120Z"}
+{"run_id": "octocat-orchestrator-n20-1", "agent": "subagent", "call_index": 4, "model": "deepseek/deepseek-v4.1-flash-1017", "input_tokens": 5120, "cached_tokens": 4096, "output_tokens": 312, "cost_usd": 0.00184, "latency_s": 3.42, "timestamp": "2026-11-26T10:15:03.120Z"}
 ```
 
 ## What score.py derives
@@ -33,7 +33,7 @@ The harness writes one JSON object per line for every model call of a run, to `r
 
 ## Run row
 
-`score.py --csv runs.csv` appends one row per run with the columns `run_id`, `group`, `model`, `strategy`, `task_set`, `n_questions`, `n_correct`, `accuracy`, `cat1_correct` to `cat4_correct`, `n_calls`, `input_tokens`, `cached_tokens`, `output_tokens`, `cost_usd`, `wall_seconds`, `answers_file` and `usage_file`.
+`score.py --csv runs.csv` appends one row per run with the columns `run_id`, `user`, `model`, `strategy`, `task_set`, `n_questions`, `n_correct`, `accuracy`, `cat1_correct` to `cat4_correct`, `n_calls`, `input_tokens`, `cached_tokens`, `output_tokens`, `cost_usd`, `wall_seconds`, `answers_file` and `usage_file`.
 `strategy` is one of `single`, `compaction` and `orchestrator`.
 The file columns hold basenames only.
-`--questions-csv` appends one row per scored question with `run_id`, `group`, `strategy`, `task_set`, `id`, `category`, `type` and `status` (`correct`, `wrong` or `missing`), without the answers.
+`--questions-csv` appends one row per scored question with `run_id`, `user`, `strategy`, `task_set`, `id`, `category`, `type` and `status` (`correct`, `wrong` or `missing`), without the answers.

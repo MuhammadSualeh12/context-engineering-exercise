@@ -1,4 +1,4 @@
-"""Check the hand-in folders submissions/<group>/<run-id>/ before a pull request; the pull request's check runs it too.
+"""Check the hand-in folders submissions/<user>/<run-id>/ before a pull request; the pull request's check runs it too.
 
 Usage:
     uv run python -m harness.submission [FOLDER ...]       check hand-in folders (default: all under submissions/)
@@ -10,7 +10,8 @@ the run's metadata.
 The trace stays in runs/.
 The last line reads "0 problem(s)" when every folder passes; each FAIL line names a folder and its problem.
 --changed takes the output of `git diff --name-status`, or one path per line.
-A pull request may only add files inside submissions/<group>/<run-id>/, and every folder it touches must pass.
+<user> is the student's GitHub user name, from `harness.run --user`.
+A pull request may only add files inside submissions/<user>/<run-id>/, and every folder it touches must pass.
 The check needs only the standard library and score.py, so the workflow runs it without installing the harness.
 """
 
@@ -32,7 +33,12 @@ NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$")
 MAX_BYTES = 2_000_000
 # Fields of run.json the hand-in keeps; a local score (when the run had a key) and local paths stay out.
 DROPPED_FIELDS = {"n_correct", "accuracy", "submission"}
-REQUIRED = {"run_id": str, "group": str, "strategy": str, "task_set": str, "model": str, "status": str}
+REQUIRED = {"run_id": str, "user": str, "strategy": str, "task_set": str, "model": str, "status": str}
+
+
+def owner(meta: dict):
+    """The user a run belongs to; run.json called it group in the pilot's hand-ins, before students worked alone."""
+    return meta.get("user", meta.get("group"))
 
 
 def file_names(run_id: str) -> list[str]:
@@ -40,9 +46,9 @@ def file_names(run_id: str) -> list[str]:
 
 
 def write(run_dir: Path, meta: dict, submit_root: Path) -> Path:
-    """Copy a finished run's answers and usage log and write its run.json into submit_root/<group>/<run-id>/."""
+    """Copy a finished run's answers and usage log and write its run.json into submit_root/<user>/<run-id>/."""
     run_id = meta["run_id"]
-    dest = Path(submit_root) / meta["group"] / run_id
+    dest = Path(submit_root) / meta["user"] / run_id
     dest.mkdir(parents=True, exist_ok=False)
     for name in file_names(run_id)[:2]:
         shutil.copyfile(run_dir / name, dest / name)
@@ -57,8 +63,8 @@ def check_folder(folder: Path, sets_dir: Path) -> list[str]:
     where = f"{folder.parent.name}/{folder.name}"
     if not folder.is_dir():
         return [f"{where}: not a folder"]
-    run_id, group = folder.name, folder.parent.name
-    errors = [f"{where}: {n} is not a valid name (letters, digits, '-', '_', '.')" for n in (group, run_id)
+    run_id, user = folder.name, folder.parent.name
+    errors = [f"{where}: {n} is not a valid name (letters, digits, '-', '_', '.')" for n in (user, run_id)
               if not NAME.match(n)]
     expected = file_names(run_id)
     present = sorted(p.name for p in folder.iterdir())
@@ -73,7 +79,7 @@ def check_folder(folder: Path, sets_dir: Path) -> list[str]:
     if errors:
         return errors
 
-    meta, ids = _check_meta(folder, where, run_id, group, sets_dir, errors)
+    meta, ids = _check_meta(folder, where, run_id, user, sets_dir, errors)
     warnings: list[str] = []
     answers = score.read_jsonl(folder / expected[0], warnings)
     seen = set()
@@ -94,7 +100,7 @@ def check_folder(folder: Path, sets_dir: Path) -> list[str]:
     return errors + [f"{where}: {w}" for w in warnings]
 
 
-def _check_meta(folder, where, run_id, group, sets_dir, errors):
+def _check_meta(folder, where, run_id, user, sets_dir, errors):
     try:
         meta = json.loads((folder / "run.json").read_text(encoding="utf-8"))
     except (json.JSONDecodeError, UnicodeDecodeError) as exc:
@@ -103,12 +109,13 @@ def _check_meta(folder, where, run_id, group, sets_dir, errors):
     if not isinstance(meta, dict):
         errors.append(f"{where}: run.json is not a JSON object")
         return {}, None
+    meta = dict(meta, user=owner(meta))
     errors += [f"{where}: run.json lacks {k} or it is not a {t.__name__}" for k, t in REQUIRED.items()
                if not isinstance(meta.get(k), t)]
     if meta.get("run_id") != run_id:
         errors.append(f"{where}: run_id {meta.get('run_id')} in run.json is not the folder name {run_id}")
-    if meta.get("group") != group:
-        errors.append(f"{where}: group {meta.get('group')} in run.json is not the folder's group {group}")
+    if meta.get("user") != user:
+        errors.append(f"{where}: user {meta.get('user')} in run.json is not the folder name {user}")
     if meta.get("strategy") not in score.STRATEGIES:
         errors.append(f"{where}: strategy {meta.get('strategy')!r} is not one of {', '.join(score.STRATEGIES)}")
     task_set = meta.get("task_set")
@@ -132,7 +139,7 @@ def check_changed(lines: list[str]) -> tuple[list[str], list[str]]:
         if not status.startswith("A"):
             errors.append(f"{path}: a pull request may only add files (git status {status})")
         elif len(parts) != 4 or parts[0] != "submissions" or not all(NAME.match(p) for p in parts[1:]):
-            errors.append(f"{path}: a pull request may only add files in submissions/<group>/<run-id>/")
+            errors.append(f"{path}: a pull request may only add files in submissions/<user>/<run-id>/")
         elif (folder := "/".join(parts[:3])) not in folders:
             folders.append(folder)
     return folders, errors
@@ -150,7 +157,7 @@ def main(argv: list[str] | None = None) -> int:
         changed, errors = check_changed(args.changed.read_text(encoding="utf-8").splitlines())
         folders += [args.root / f for f in changed]
         if not changed and not errors:
-            errors.append("the pull request adds no hand-in folder under submissions/<group>/<run-id>/")
+            errors.append("the pull request adds no hand-in folder under submissions/<user>/<run-id>/")
     elif not folders:
         folders = sorted(p for p in (args.root / "submissions").glob("*/*") if p.is_dir())
     for folder in folders:

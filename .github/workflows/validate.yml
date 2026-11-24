@@ -1,6 +1,6 @@
-# Checks a group's hand-in when its pull request opens or changes.
+# Checks a student's hand-in when its pull request opens or changes.
 # Runs on the pull request's own code with a read-only token and no secrets, so it never sees the answer key.
-# A pull request may only add files inside submissions/<group>/<run-id>/ (harness/submission.py).
+# A pull request may only add files inside submissions/<user>/<run-id>/ (<user>: the GitHub user name) (harness/submission.py).
 name: validate hand-in
 
 on:

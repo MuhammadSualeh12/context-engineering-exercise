@@ -260,14 +260,74 @@ def test_command_line_defaults_come_from_the_pilot():
     # deepseek, compaction at 30000 and a context cap of 48000 on by default, with a flag to turn the cap off
     from harness import check
     from harness.run import parser
-    args = parser().parse_args(["--strategy", "single", "--set", "n05", "--group", "g07"])
+    args = parser().parse_args(["--strategy", "single", "--set", "n05", "--user", "octocat"])
     assert (args.model, args.threshold, args.context_cap) == ("deepseek/deepseek-v4.1-flash-1017", 30_000, 48_000)
     assert check.DEFAULT_MODEL == args.model
-    off = parser().parse_args(["--strategy", "single", "--set", "n05", "--group", "g07", "--no-context-cap"])
+    off = parser().parse_args(["--strategy", "single", "--set", "n05", "--user", "octocat", "--no-context-cap"])
     assert off.context_cap is None
     with pytest.raises(SystemExit):
-        parser().parse_args(["--strategy", "single", "--set", "n05", "--group", "g", "--context-cap", "9",
+        parser().parse_args(["--strategy", "single", "--set", "n05", "--user", "u", "--context-cap", "9",
                              "--no-context-cap"])
+
+
+def test_user_names_the_run_and_group_still_works_as_a_hidden_alias():
+    # Students work alone since 24 Nov: --user is the GitHub user name, --group stays for old commands.
+    from harness.run import parser
+    base = ["--strategy", "single", "--set", "n05"]
+    assert parser().parse_args(base + ["--user", "octocat"]).user == "octocat"
+    assert parser().parse_args(base + ["--group", "g07"]).user == "g07"
+    text = parser().format_help()
+    assert "--user" in text and "group" not in text.lower().replace("mutually_exclusive_group", "")
+
+
+def test_run_without_a_user_stops_with_a_hint(capsys):
+    from harness.run import main
+    with pytest.raises(SystemExit):
+        main(["--strategy", "single", "--set", "n05"])
+    assert "--user" in capsys.readouterr().err
+
+
+def offline_stubs(monkeypatch):
+    from harness import check
+
+    def never(*_args):
+        raise AssertionError("the offline check must not touch the key or the model")
+
+    monkeypatch.setattr(check, "check_models", lambda: "11 models (stub)")
+    monkeypatch.setattr(check, "check_key", never)
+    monkeypatch.setattr(check, "check_call", never)
+    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+    return check
+
+
+def test_offline_check_covers_everything_but_the_key_and_the_model_call(monkeypatch, capsys):
+    # The Moodle mail quotes the last line, so it must read exactly "all checks passed".
+    check = offline_stubs(monkeypatch)
+    assert check.main(["--offline"]) == 0
+    lines = capsys.readouterr().out.splitlines()
+    assert lines[-1] == "all checks passed"
+    passed = {l[6:].split(":")[0] for l in lines if l.startswith("ok    ")}
+    assert {"git", "packages", "IFC models", "harness"} <= passed
+    assert not [l for l in lines if l.startswith("FAIL")]
+
+
+def test_missing_questions_are_a_note_not_a_failure(monkeypatch, capsys, tmp_path):
+    # Before the lecture morning the clone has no questions/, and the offline check still passes.
+    check = offline_stubs(monkeypatch)
+    monkeypatch.setattr(check, "SETS_DIR", tmp_path / "questions" / "sets")
+    assert check.main(["--offline"]) == 0
+    out = capsys.readouterr().out
+    assert "note  questions:" in out and out.splitlines()[-1] == "all checks passed"
+
+
+def test_full_check_adds_the_key_and_the_model_call(monkeypatch, capsys):
+    check = offline_stubs(monkeypatch)
+    monkeypatch.setattr(check, "check_key", lambda: "set")
+    monkeypatch.setattr(check, "check_call", lambda model: f"{model} replied 'OK'")
+    assert check.main([]) == 0
+    lines = capsys.readouterr().out.splitlines()
+    assert lines[-1] == "all checks passed"
+    assert any(l.startswith("ok    API key") for l in lines) and any(l.startswith("ok    model call") for l in lines)
 
 
 def test_the_compaction_hard_fallback_fires_under_the_default_cap():

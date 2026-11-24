@@ -1,7 +1,7 @@
 """Run one strategy on one task set and write everything into runs/<run-id>/.
 
 Usage, typed on one line:
-    uv run python -m harness.run --strategy {single,compaction,orchestrator} --set n05 --group g07
+    uv run python -m harness.run --strategy {single,compaction,orchestrator} --set n05 --user octocat
                                  [--submit-dir submissions] [--threshold 30000]
                                  [--context-cap 48000 | --no-context-cap]
                                  [--model deepseek/deepseek-v4.1-flash-1017] [--run-id ID] [--key KEY.jsonl]
@@ -12,7 +12,8 @@ The run writes <run-id>.answers.jsonl, <run-id>.usage.jsonl (docs/usage-log.md),
 and trace.html into runs/<run-id>/.
 With an answer key it also writes the score rows <run-id>.run.csv and <run-id>.questions.csv from score.py.
 With --submit-dir submissions it also copies the answers, the usage log and run.json to
-submissions/<group>/<run-id>/, the folder a pull request hands in (harness/submission.py).
+submissions/<user>/<run-id>/, the folder a pull request hands in (harness/submission.py).
+--user takes the GitHub user name, which names the hand-in folder; without a GitHub account any short name.
 Every agent has a context cap of 48000 tokens, unless --context-cap N or --no-context-cap sets another
 (harness/context_cap.py).
 An agent stops when its next model call would send more than the cap.
@@ -77,16 +78,16 @@ def final_text(state: dict | None) -> str:
     return next((m.text for m in reversed(messages) if m.type == "ai" and m.text.strip()), "")
 
 
-def free_run_id(group: str, strategy: str, set_name: str, runs_dir: Path = RUNS,
+def free_run_id(user: str, strategy: str, set_name: str, runs_dir: Path = RUNS,
                 submit_dir: Path | None = SUBMISSIONS) -> str:
-    """The first <group>-<strategy>-<set>-<n> taken neither in runs/ nor among the group's submissions."""
+    """The first <user>-<strategy>-<set>-<n> taken neither in runs/ nor among the user's submissions."""
     def taken(run_id: str) -> bool:
-        return (runs_dir / run_id).exists() or bool(submit_dir and (submit_dir / group / run_id).exists())
+        return (runs_dir / run_id).exists() or bool(submit_dir and (submit_dir / user / run_id).exists())
 
     n = 1
-    while taken(f"{group}-{strategy}-{set_name}-{n}"):
+    while taken(f"{user}-{strategy}-{set_name}-{n}"):
         n += 1
-    return f"{group}-{strategy}-{set_name}-{n}"
+    return f"{user}-{strategy}-{set_name}-{n}"
 
 
 def failure_status(exc: Exception) -> str:
@@ -98,7 +99,7 @@ def failure_status(exc: Exception) -> str:
     return "error"
 
 
-def run(strategy: str, set_path: Path, model: str, group: str, run_id: str, threshold: int, llm=None,
+def run(strategy: str, set_path: Path, model: str, user: str, run_id: str, threshold: int, llm=None,
         key: Path | None = None, runs_dir: Path = RUNS, submit_dir: Path | None = None,
         context_cap: int | None = None) -> dict:
     task = json.loads(set_path.read_text(encoding="utf-8"))
@@ -110,7 +111,7 @@ def run(strategy: str, set_path: Path, model: str, group: str, run_id: str, thre
         path.write_text("", encoding="utf-8")
 
     recorder = Recorder(run_id, model, files["usage"], files["trace"], main_agent=strategy)
-    meta = {"run_id": run_id, "group": group, "strategy": strategy, "task_set": task.get("name", set_path.stem),
+    meta = {"run_id": run_id, "user": user, "strategy": strategy, "task_set": task.get("name", set_path.stem),
             "n_questions": len(ids), "model": model, "threshold": threshold if strategy == "compaction" else None,
             "context_cap": context_cap, "started": now_iso()}
     recorder.event("run_start", agent=strategy, **meta)
@@ -158,7 +159,7 @@ def score_run(meta: dict, set_path: Path, files: dict, key: Path, out: Path) -> 
     run_id, run_csv = meta["run_id"], out / f"{meta['run_id']}.run.csv"
     score.main([str(files["answers"]), str(key), "--set", str(set_path), "--usage", str(files["usage"]),
                 "--csv", str(run_csv), "--questions-csv", str(out / f"{run_id}.questions.csv"),
-                "--strategy", meta["strategy"], "--group", meta["group"], "--model", meta["model"],
+                "--strategy", meta["strategy"], "--user", meta["user"], "--model", meta["model"],
                 "--run-id", run_id])
     with run_csv.open(encoding="utf-8") as fh:
         return list(csv.DictReader(fh))[-1]
@@ -169,7 +170,9 @@ def parser() -> argparse.ArgumentParser:
     ap.add_argument("--strategy", choices=STRATEGIES, required=True)
     ap.add_argument("--set", required=True, help="task set name from questions/sets/, e.g. n05")
     ap.add_argument("--model", default=defaults.MODEL, help=f"OpenRouter model id (default: {defaults.MODEL})")
-    ap.add_argument("--group", required=True, help="the group name from the lecture, e.g. g07")
+    ap.add_argument("--user", help="GitHub user name, which names the hand-in folder and the run id, e.g. octocat; "
+                                   "without a GitHub account any short name")
+    ap.add_argument("--group", dest="user", help=argparse.SUPPRESS)  # before 24 Nov students worked in groups
     ap.add_argument("--threshold", type=int, default=defaults.THRESHOLD,
                     help="compaction threshold: context tokens at which smart compaction warns the agent "
                          f"(default: {defaults.THRESHOLD})")
@@ -179,10 +182,10 @@ def parser() -> argparse.ArgumentParser:
                           f"(default: {defaults.CONTEXT_CAP})")
     cap.add_argument("--no-context-cap", dest="context_cap", action="store_const", const=None,
                      help="no context cap: every agent has the model's full context window")
-    ap.add_argument("--run-id", help="default: <group>-<strategy>-<set>-<n> with the first free n")
+    ap.add_argument("--run-id", help="default: <user>-<strategy>-<set>-<n> with the first free n")
     ap.add_argument("--key", type=Path, default=ROOT / "answer-key.jsonl",
                     help="answer key for scoring; the student repo has none, GitHub scores the hand-ins")
-    ap.add_argument("--submit-dir", type=Path, help="also write the hand-in folder <dir>/<group>/<run-id>/, "
+    ap.add_argument("--submit-dir", type=Path, help="also write the hand-in folder <dir>/<user>/<run-id>/, "
                                                     "e.g. --submit-dir submissions")
     return ap
 
@@ -190,6 +193,11 @@ def parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     ap = parser()
     args = ap.parse_args(argv)
+    if not args.user:
+        ap.error("--user is missing: give the GitHub user name, e.g. --user octocat (without a GitHub account any "
+                 "short name)")
+    if not submission.NAME.match(args.user):
+        ap.error("--user takes letters, digits, '-', '_' and '.' only, e.g. octocat")
 
     set_path = ROOT / "questions" / "sets" / f"{args.set}.json"
     if not set_path.exists():
@@ -198,18 +206,16 @@ def main(argv: list[str] | None = None) -> int:
     if not os.environ.get("OPENROUTER_API_KEY"):
         ap.error("OPENROUTER_API_KEY is not set in this terminal window; set it as in the README, "
                  "then run `uv run python -m harness.check`")
-    if not submission.NAME.match(args.group):
-        ap.error("--group takes letters, digits, '-', '_' and '.' only, e.g. g07")
     submit_dir = args.submit_dir.resolve() if args.submit_dir else None
-    run_id = args.run_id or free_run_id(args.group, args.strategy, args.set, RUNS, submit_dir or SUBMISSIONS)
-    if (RUNS / run_id).exists() or (submit_dir and (submit_dir / args.group / run_id).exists()):
+    run_id = args.run_id or free_run_id(args.user, args.strategy, args.set, RUNS, submit_dir or SUBMISSIONS)
+    if (RUNS / run_id).exists() or (submit_dir and (submit_dir / args.user / run_id).exists()):
         ap.error(f"run {run_id} exists already; pick another --run-id")
     if not submission.NAME.match(run_id):
         ap.error("--run-id takes letters, digits, '-', '_' and '.' only")
 
     if args.context_cap is not None and args.context_cap <= 0:
         ap.error("--context-cap takes a positive number of tokens")
-    meta = run(args.strategy, set_path, args.model, args.group, run_id, args.threshold, key=args.key,
+    meta = run(args.strategy, set_path, args.model, args.user, run_id, args.threshold, key=args.key,
                submit_dir=submit_dir, context_cap=args.context_cap)
     print(f"\n{run_id}: {meta['status']}, {meta['n_answered']}/{meta['n_questions']} answered, {meta['calls']} calls, "
           f"{meta['input_tokens']} tokens in ({meta['cached_tokens']} cached), {meta['output_tokens']} out, "

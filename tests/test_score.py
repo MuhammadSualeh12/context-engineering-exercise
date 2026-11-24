@@ -138,7 +138,7 @@ USAGE = [
 def test_end_to_end_missing_duplicates_and_run_row(files, tmp_path, capsys):
     key, answers, task = files
     out = tmp_path / "results.csv"
-    assert score.main([str(answers), str(key), "--set", str(task), "--csv", str(out), "--strategy", "single", "--group", "g1",
+    assert score.main([str(answers), str(key), "--set", str(task), "--csv", str(out), "--strategy", "single", "--user", "u1",
                        "--model", "m/big"]) == 0
     printed = capsys.readouterr()
     assert "q3    enum    missing" in printed.out
@@ -150,12 +150,14 @@ def test_end_to_end_missing_duplicates_and_run_row(files, tmp_path, capsys):
         reader = csv.DictReader(fh)
         assert reader.fieldnames == score.RUN_FIELDS
         rows = list(reader)
-    assert rows == [dict(run_id="run1", group="g1", model="m/big", strategy="single", task_set="tiny", n_questions="4", n_correct="2",
+    assert rows == [dict(run_id="run1", user="u1", model="m/big", strategy="single", task_set="tiny", n_questions="4", n_correct="2",
                          accuracy="0.5000", cat1_correct="0", cat2_correct="1", cat3_correct="1", cat4_correct="0",
                          n_calls="", input_tokens="", cached_tokens="", output_tokens="", cost_usd="", wall_seconds="",
                          answers_file="run1.jsonl", usage_file="")]
     score.main([str(answers), str(key), "--set", str(task), "--csv", str(out), "--strategy", "single"])
     assert len(list(csv.DictReader(out.open()))) == 2
+    score.main([str(answers), str(key), "--set", str(task), "--csv", str(out), "--strategy", "single", "--group", "g2"])
+    assert list(csv.DictReader(out.open()))[-1]["user"] == "g2"  # --group is a hidden alias of --user
 
 
 def test_run_row_with_usage_log_and_per_question_csv(files, tmp_path):
@@ -165,7 +167,7 @@ def test_run_row_with_usage_log_and_per_question_csv(files, tmp_path):
     write_jsonl(usage, USAGE)
     out, perq = tmp_path / "runs.csv", tmp_path / "questions.csv"
     score.main([str(answers), str(key), "--set", str(task), "--usage", str(usage), "--csv", str(out),
-                "--questions-csv", str(perq), "--strategy", "orchestrator", "--group", "g1"])
+                "--questions-csv", str(perq), "--strategy", "orchestrator", "--user", "u1"])
     [row] = list(csv.DictReader(out.open(newline="")))
     assert row["run_id"] == "g1-orch-n10"
     assert row["model"] == "m/big+m/small"

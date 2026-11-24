@@ -3,7 +3,7 @@
 Usage:
     uv run score.py ANSWERS.jsonl KEY.jsonl [--set questions/sets/n10.json] [--usage USAGE.jsonl]
                     [--csv runs.csv --strategy {single,compaction,orchestrator}] [--questions-csv questions.csv]
-                    [--run-id ID] [--group NAME] [--model NAME]
+                    [--run-id ID] [--user NAME] [--model NAME]
 
 ANSWERS.jsonl has one line per question: {"id": "q07", "answer": ...}.
 KEY.jsonl is the answer key, supplied by the instructor or by the scoring action.
@@ -43,10 +43,10 @@ LETTER_TEXT = re.compile(r"^\(?([A-Da-d])(?:\)|\.|:|\)\.)\s+(.+)$", re.S)
 STRATEGIES = ["single", "compaction", "orchestrator"]
 AGENTS = {"single", "compaction", "orchestrator", "subagent"}  # "single" also in compaction runs logged before the rename
 CATEGORIES = [1, 2, 3, 4]
-RUN_FIELDS = ["run_id", "group", "model", "strategy", "task_set", "n_questions", "n_correct", "accuracy",
+RUN_FIELDS = ["run_id", "user", "model", "strategy", "task_set", "n_questions", "n_correct", "accuracy",
               *(f"cat{c}_correct" for c in CATEGORIES), "n_calls", "input_tokens", "cached_tokens", "output_tokens",
               "cost_usd", "wall_seconds", "answers_file", "usage_file"]
-QUESTION_FIELDS = ["run_id", "group", "strategy", "task_set", "id", "category", "type", "status"]
+QUESTION_FIELDS = ["run_id", "user", "strategy", "task_set", "id", "category", "type", "status"]
 USAGE_FIELDS = {"run_id": str, "agent": str, "call_index": int, "model": str, "input_tokens": int, "cached_tokens": int,
                 "output_tokens": int, "cost_usd": (int, float), "latency_s": (int, float), "timestamp": str}
 
@@ -186,7 +186,7 @@ def score(answers: dict, key: dict, ids: list[str]) -> list[dict]:
 
 
 def score_run(answers_path: Path, key: dict, ids: list[str], set_name: str, usage_path: Path | None = None,
-              run_id: str | None = None, strategy: str = "", group: str = "", model: str | None = None):
+              run_id: str | None = None, strategy: str = "", user: str = "", model: str | None = None):
     """Score one run: (per-question results with a status each, the run row, warnings). Prints nothing."""
     answers, warnings = load_answers(answers_path)
     extra = sorted(set(answers) - set(ids))
@@ -201,7 +201,7 @@ def score_run(answers_path: Path, key: dict, ids: list[str], set_name: str, usag
         r["status"] = "correct" if r["correct"] else ("missing" if not r["answered"] else "wrong")
     n, n_correct = len(results), sum(r["correct"] for r in results)
     accuracy = n_correct / n if n else 0.0
-    row = dict(run_id=run_id or (calls[0]["run_id"] if calls else answers_path.stem), group=group,
+    row = dict(run_id=run_id or (calls[0]["run_id"] if calls else answers_path.stem), user=user,
                model=model or "+".join(sorted({c["model"] for c in calls})), strategy=strategy, task_set=set_name,
                n_questions=n, n_correct=n_correct, accuracy=f"{accuracy:.4f}",
                **{f"cat{c}_correct": sum(1 for r in results if r["correct"] and r["category"] == c) for c in CATEGORIES},
@@ -229,7 +229,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--questions-csv", type=Path, help="append one row per scored question to this CSV file")
     ap.add_argument("--run-id", help="run id (default: the usage log's run_id, else the answers file stem)")
     ap.add_argument("--strategy", choices=STRATEGIES, help="context strategy of the run; needed with --csv")
-    ap.add_argument("--group", default="", help="student group name")
+    ap.add_argument("--user", default="", help="the student's GitHub user name")
+    ap.add_argument("--group", dest="user", help=argparse.SUPPRESS)  # name before 24 Nov
     ap.add_argument("--model", help="model name (default: the usage log's models, joined by +)")
     args = ap.parse_args(argv)
     if (args.csv or args.questions_csv) and not args.strategy:
@@ -246,7 +247,7 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit(f"ids missing from the answer key: {', '.join(unknown)}")
 
     results, row, warnings = score_run(args.answers, key, ids, set_name, args.usage, args.run_id,
-                                       args.strategy or "", args.group, args.model)
+                                       args.strategy or "", args.user, args.model)
     for w in warnings:
         print(f"warning: {w}", file=sys.stderr)
     for r in results:
@@ -261,7 +262,7 @@ def main(argv: list[str] | None = None) -> int:
         append_csv(args.csv, RUN_FIELDS, [row])
     if args.questions_csv:
         append_csv(args.questions_csv, QUESTION_FIELDS,
-                   [dict(run_id=run_id, group=args.group, strategy=args.strategy, task_set=set_name,
+                   [dict(run_id=run_id, user=args.user, strategy=args.strategy, task_set=set_name,
                          **{k: r[k] for k in ("id", "category", "type", "status")}) for r in results])
     return 0
 
