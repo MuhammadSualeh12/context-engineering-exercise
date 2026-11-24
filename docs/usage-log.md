@@ -1,14 +1,14 @@
 # Usage log format
 
-The harness writes one JSON object per line for every model call of a run, to a file such as `runs/<run_id>.usage.jsonl`.
+The harness writes one JSON object per line for every model call of a run, to `runs/<run_id>/<run_id>.usage.jsonl`.
 `score.py --usage` reads it and adds the run's call count, token totals, cost and wall time to the run row.
 
 ## Fields
 
 - `run_id` (string): the run's id, the same on every line of the run, for example `g07-orchestrator-n20-1`.
-- `agent` (string): `single` for the agent of a single-agent or compaction run, `orchestrator` or `subagent` in an orchestrator run.
+- `agent` (string): `single` for the agent of a single-agent or smart-compaction run; in an orchestrator run, `orchestrator` for the orchestrator and `subagent` for every ifc-worker.
 - `call_index` (integer): the call's position in the run, counted from 1 across all agents.
-- `model` (string): the OpenRouter model id the call went to, for example `openai/gpt-5-mini`.
+- `model` (string): the OpenRouter model id the call went to, for example `deepseek/deepseek-v4.1-flash-1017`.
 - `input_tokens` (integer): prompt tokens of the call, cached tokens included.
 - `cached_tokens` (integer): the part of `input_tokens` read from the provider's prompt cache, 0 when none.
 - `output_tokens` (integer): completion tokens, reasoning tokens included.
@@ -19,7 +19,7 @@ The harness writes one JSON object per line for every model call of a run, to a 
 ## Example line
 
 ```json
-{"run_id": "g07-orchestrator-n20-1", "agent": "subagent", "call_index": 4, "model": "openai/gpt-5-mini", "input_tokens": 5120, "cached_tokens": 4096, "output_tokens": 312, "cost_usd": 0.00184, "latency_s": 3.42, "timestamp": "2026-11-26T10:15:03.120Z"}
+{"run_id": "g07-orchestrator-n20-1", "agent": "subagent", "call_index": 4, "model": "deepseek/deepseek-v4.1-flash-1017", "input_tokens": 5120, "cached_tokens": 4096, "output_tokens": 312, "cost_usd": 0.00184, "latency_s": 3.42, "timestamp": "2026-11-26T10:15:03.120Z"}
 ```
 
 ## What score.py derives

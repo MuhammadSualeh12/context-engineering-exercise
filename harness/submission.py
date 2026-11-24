@@ -1,14 +1,16 @@
-"""The hand-in of a run, submissions/<group>/<run-id>/, and the check the pull-request workflow runs on it.
+"""Check the hand-in folders submissions/<group>/<run-id>/ before a pull request; the pull request's check runs it too.
 
 Usage:
-    uv run python -m harness.submission [FOLDER ...]       check run folders (default: every one under submissions/)
-    uv run python -m harness.submission --changed FILE     check a pull request's changed paths and their folders
+    uv run python -m harness.submission [FOLDER ...]       check hand-in folders (default: all under submissions/)
+    uv run python -m harness.submission --changed FILE     check the changed paths of a pull request
 
-A hand-in folder holds exactly three files, copied from runs/<run-id>/ by `harness.run --submit-dir submissions`:
-<run-id>.answers.jsonl, <run-id>.usage.jsonl (docs/usage-log.md) and run.json, the run's metadata.
+`harness.run --submit-dir submissions` writes the hand-in folder.
+It holds exactly three files: <run-id>.answers.jsonl, <run-id>.usage.jsonl (docs/usage-log.md) and run.json,
+the run's metadata.
 The trace stays in runs/.
---changed takes the output of `git diff --name-status`, or one path per line: a pull request may only add files
-inside submissions/<group>/<run-id>/, and every folder it touches must pass the check.
+The last line reads "0 problem(s)" when every folder passes; each FAIL line names a folder and its problem.
+--changed takes the output of `git diff --name-status`, or one path per line.
+A pull request may only add files inside submissions/<group>/<run-id>/, and every folder it touches must pass.
 The check needs only the standard library and score.py, so the workflow runs it without installing the harness.
 """
 

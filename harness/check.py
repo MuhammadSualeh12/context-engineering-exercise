@@ -1,7 +1,10 @@
-"""Check the setup before the lecture: packages, OpenRouter key, IFC models, one tiny model call.
+"""Check the setup before the lecture: the packages, the IFC models, the OpenRouter key and one tiny model call.
 
 Usage:
     uv run python -m harness.check [--model deepseek/deepseek-v4.1-flash-1017] [--offline]
+
+The model call costs a fraction of a cent.
+The last line reads "all checks passed" when the setup is ready; each FAIL line names a problem.
 """
 
 import argparse
@@ -33,7 +36,9 @@ def check_models() -> str:
 def check_key() -> str:
     key = os.environ.get("OPENROUTER_API_KEY", "")
     if not key:
-        raise RuntimeError("OPENROUTER_API_KEY is not set in this shell")
+        raise RuntimeError("OPENROUTER_API_KEY is not set in this terminal window; set it with "
+                           '$env:OPENROUTER_API_KEY = "sk-or-..." in PowerShell, '
+                           'export OPENROUTER_API_KEY="sk-or-..." on macOS and Linux')
     return f"OPENROUTER_API_KEY is set ({len(key)} characters)"
 
 
@@ -47,9 +52,17 @@ def check_call(model: str) -> str:
             f"{usage.get('output_tokens')} out, cost {'not reported' if cost is None else f'{cost:.6f} USD'}")
 
 
+# Printed under a FAIL line of the check with the same name.
+HINTS = {
+    "packages": "uv run installs the packages; check the internet connection and run the check again",
+    "model call": "Unauthorized or 401: the key is wrong or incomplete, set it again; TooManyRequests or 429: "
+                  "rate limit, wait a minute and run the check again",
+}
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--model", default=DEFAULT_MODEL)
+    ap.add_argument("--model", default=DEFAULT_MODEL, help=f"OpenRouter model id (default: {DEFAULT_MODEL})")
     ap.add_argument("--offline", action="store_true", help="skip the key and the model call")
     args = ap.parse_args(argv)
     checks = [("packages", check_packages), ("IFC models", check_models)]
@@ -62,6 +75,8 @@ def main(argv: list[str] | None = None) -> int:
         except Exception as exc:
             failed += 1
             print(f"FAIL  {name}: {type(exc).__name__}: {exc}")
+            if name in HINTS:
+                print(f"      {HINTS[name]}")
             if name == "API key":
                 break  # the model call cannot work without it
     print("all checks passed" if not failed else f"{failed} check(s) failed")

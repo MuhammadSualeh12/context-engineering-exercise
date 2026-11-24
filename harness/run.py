@@ -1,20 +1,26 @@
 """Run one strategy on one task set and write everything into runs/<run-id>/.
 
-Usage:
+Usage, typed on one line:
     uv run python -m harness.run --strategy {single,compaction,orchestrator} --set n05 --group g07
-                                 [--model deepseek/deepseek-v4.1-flash-1017] [--threshold 30000]
-                                 [--context-cap 48000 | --no-context-cap] [--run-id ID]
-                                 [--key answer-key.jsonl] [--submit-dir submissions]
+                                 [--submit-dir submissions] [--threshold 30000]
+                                 [--context-cap 48000 | --no-context-cap]
+                                 [--model deepseek/deepseek-v4.1-flash-1017] [--run-id ID] [--key KEY.jsonl]
 
-Writes <run-id>.answers.jsonl, <run-id>.usage.jsonl (docs/usage-log.md), <run-id>.trace.jsonl, run.json and
-trace.html, and with an answer key also the run row <run-id>.run.csv and <run-id>.questions.csv from score.py.
-With --submit-dir the answers, the usage log and run.json are also copied to <submit-dir>/<group>/<run-id>/,
-the folder a pull request hands in (harness/submission.py).
-A run that fails (context overflow, timeout, API error, Ctrl-C) still writes what it has, and run.json says why
-and counts the failed model calls, malformed tool calls and python errors.
-Every agent stops once its next model call would send more than the context cap, 48000 tokens unless
---context-cap N or --no-context-cap says otherwise (harness/context_cap.py): the main agent ends the run with
-status context_overflow, a worker fails its task. The defaults come from harness/defaults.py.
+The strategies are the single agent (single), smart compaction (compaction) and the orchestrator with one
+ifc-worker subagent per IFC file (orchestrator).
+The run writes <run-id>.answers.jsonl, <run-id>.usage.jsonl (docs/usage-log.md), <run-id>.trace.jsonl, run.json
+and trace.html into runs/<run-id>/.
+With an answer key it also writes the score rows <run-id>.run.csv and <run-id>.questions.csv from score.py.
+With --submit-dir submissions it also copies the answers, the usage log and run.json to
+submissions/<group>/<run-id>/, the folder a pull request hands in (harness/submission.py).
+Every agent has a context cap of 48000 tokens, unless --context-cap N or --no-context-cap sets another
+(harness/context_cap.py).
+An agent stops when its next model call would send more than the cap.
+A single agent or smart-compaction agent then ends the run with status context_overflow, a result to hand in.
+An ifc-worker that reaches the cap fails only its own task, and the orchestrator carries on.
+A run that fails (timeout, API error, Ctrl-C) still writes what it has; run.json gives the reason and counts
+the failed model calls, malformed tool calls and Python errors.
+The defaults come from harness/defaults.py.
 """
 
 import argparse
@@ -163,17 +169,19 @@ def parser() -> argparse.ArgumentParser:
     ap.add_argument("--strategy", choices=STRATEGIES, required=True)
     ap.add_argument("--set", required=True, help="task set name from questions/sets/, e.g. n05")
     ap.add_argument("--model", default=defaults.MODEL, help=f"OpenRouter model id (default: {defaults.MODEL})")
-    ap.add_argument("--group", required=True, help="your group name, e.g. g07")
+    ap.add_argument("--group", required=True, help="the group name from the lecture, e.g. g07")
     ap.add_argument("--threshold", type=int, default=defaults.THRESHOLD,
-                    help=f"compaction: context tokens before the warning (default: {defaults.THRESHOLD})")
+                    help="compaction threshold: context tokens at which smart compaction warns the agent "
+                         f"(default: {defaults.THRESHOLD})")
     cap = ap.add_mutually_exclusive_group()
     cap.add_argument("--context-cap", type=int, default=defaults.CONTEXT_CAP,
-                     help="context window per agent in tokens; an agent whose next call would exceed it stops "
+                     help="context cap per agent in tokens; an agent whose next call would exceed it stops "
                           f"(default: {defaults.CONTEXT_CAP})")
     cap.add_argument("--no-context-cap", dest="context_cap", action="store_const", const=None,
-                     help="no cap: every agent has the model's own context window")
+                     help="no context cap: every agent has the model's full context window")
     ap.add_argument("--run-id", help="default: <group>-<strategy>-<set>-<n> with the first free n")
-    ap.add_argument("--key", type=Path, default=ROOT / "answer-key.jsonl", help="answer key for scoring")
+    ap.add_argument("--key", type=Path, default=ROOT / "answer-key.jsonl",
+                    help="answer key for scoring; the student repo has none, GitHub scores the hand-ins")
     ap.add_argument("--submit-dir", type=Path, help="also write the hand-in folder <dir>/<group>/<run-id>/, "
                                                     "e.g. --submit-dir submissions")
     return ap
@@ -185,9 +193,11 @@ def main(argv: list[str] | None = None) -> int:
 
     set_path = ROOT / "questions" / "sets" / f"{args.set}.json"
     if not set_path.exists():
-        ap.error(f"no task set {set_path}")
+        ap.error(f"no task set {set_path}; check the --set name, and if questions/sets/ is missing, get the "
+                 "questions with git pull (README, On the lecture day)")
     if not os.environ.get("OPENROUTER_API_KEY"):
-        ap.error("OPENROUTER_API_KEY is not set; see the README and run `uv run python -m harness.check`")
+        ap.error("OPENROUTER_API_KEY is not set in this terminal window; set it as in the README, "
+                 "then run `uv run python -m harness.check`")
     if not submission.NAME.match(args.group):
         ap.error("--group takes letters, digits, '-', '_' and '.' only, e.g. g07")
     submit_dir = args.submit_dir.resolve() if args.submit_dir else None
@@ -206,6 +216,8 @@ def main(argv: list[str] | None = None) -> int:
           f"{meta['cost_usd']:.4f} USD, {meta['wall_seconds']} s")
     if meta["error"]:
         print(f"error: {meta['error']}")
+    if meta["status"] != "ok":
+        print(f"status {meta['status']}: see How a run ends in the README")
     if "accuracy" in meta:
         print(f"score: {meta['n_correct']}/{meta['n_questions']} correct")
     else:
