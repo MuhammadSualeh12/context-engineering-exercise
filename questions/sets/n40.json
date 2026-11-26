@@ -1,0 +1,563 @@
+{
+ "name": "n40",
+ "seed": 20261126,
+ "n": 40,
+ "description": "40 question(s) spread over the models (prefix of one seeded round-robin order, so smaller sets are nested in larger ones)",
+ "models": [
+  "4351",
+  "ac20",
+  "duplex_arc",
+  "duplex_mep",
+  "fantasy_hotel_1",
+  "fantasy_office_building_1",
+  "fantasy_office_building_2",
+  "fantasy_office_building_3",
+  "fantasy_residential_building_1",
+  "fzk_house",
+  "smiley_west"
+ ],
+ "ids": [
+  "q50",
+  "q25",
+  "q33",
+  "q58",
+  "q37",
+  "q24",
+  "q41",
+  "q14",
+  "q03",
+  "q63",
+  "q47",
+  "q49",
+  "q27",
+  "q31",
+  "q59",
+  "q36",
+  "q23",
+  "q39",
+  "q16",
+  "q09",
+  "q61",
+  "q46",
+  "q53",
+  "q26",
+  "q30",
+  "q57",
+  "q38",
+  "q22",
+  "q43",
+  "q17",
+  "q05",
+  "q62",
+  "q44",
+  "q54",
+  "q28",
+  "q32",
+  "q56",
+  "q34",
+  "q21",
+  "q42"
+ ],
+ "questions": [
+  {
+   "id": "q50",
+   "model": "fantasy_residential_building_1",
+   "file": "models/fantasy_residential_building_1.ifc",
+   "category": 2,
+   "answer_type": "integer",
+   "question": "Model fantasy_residential_building_1.ifc. How many doors are there in the building?\nAnswer with an integer."
+  },
+  {
+   "id": "q25",
+   "model": "duplex_mep",
+   "file": "models/duplex_mep.ifc",
+   "category": 1,
+   "answer_type": "set",
+   "item": "room number such as A102 (drop any -M suffix)",
+   "question": "Model duplex_mep.ifc. In which rooms are the main electrical panels located?\nAnswer with a JSON list of strings, one room number such as A102 (drop any -M suffix) per entry; order does not matter."
+  },
+  {
+   "id": "q33",
+   "model": "fantasy_hotel_1",
+   "file": "models/fantasy_hotel_1.ifc",
+   "category": 4,
+   "answer_type": "mcq",
+   "options": {
+    "A": "A heat pump on the 'Mumti' roof level",
+    "B": "Underfloor heating",
+    "C": "Cannot be determined from the model",
+    "D": "Radiators in each guest room, fed by a gas boiler"
+   },
+   "question": "Model fantasy_hotel_1.ifc. What heating systems are installed?\nA. A heat pump on the 'Mumti' roof level\nB. Underfloor heating\nC. Cannot be determined from the model\nD. Radiators in each guest room, fed by a gas boiler\nAnswer with the letter (A, B, C or D) of the one correct option."
+  },
+  {
+   "id": "q58",
+   "model": "fzk_house",
+   "file": "models/fzk_house.ifc",
+   "category": 2,
+   "answer_type": "float",
+   "unit": "m",
+   "tolerance": 0.5,
+   "question": "Model fzk_house.ifc. What is the total length of the exterior walls?\nAnswer with a number in m; answers within ±0.5 m count as correct."
+  },
+  {
+   "id": "q37",
+   "model": "fantasy_office_building_1",
+   "file": "models/fantasy_office_building_1.ifc",
+   "category": 3,
+   "answer_type": "mcq",
+   "options": {
+    "A": "1370.3 m³",
+    "B": "577.4 m³",
+    "C": "351.2 m³",
+    "D": "190.1 m³"
+   },
+   "question": "Model fantasy_office_building_1.ifc. What is the total volume of all floor slabs combined?\nA. 1370.3 m³\nB. 577.4 m³\nC. 351.2 m³\nD. 190.1 m³\nAnswer with the letter (A, B, C or D) of the one correct option."
+  },
+  {
+   "id": "q24",
+   "model": "duplex_arc",
+   "file": "models/duplex_arc.ifc",
+   "category": 4,
+   "answer_type": "mcq",
+   "options": {
+    "A": "Cannot be determined from the model",
+    "B": "About 32.3 m³",
+    "C": "About 16.5 m³ over the 7 wall footings",
+    "D": "About 48.8 m³"
+   },
+   "question": "Model duplex_arc.ifc. What volume of concrete do the wall footings of the foundation need?\nA. Cannot be determined from the model\nB. About 32.3 m³\nC. About 16.5 m³ over the 7 wall footings\nD. About 48.8 m³\nAnswer with the letter (A, B, C or D) of the one correct option."
+  },
+  {
+   "id": "q41",
+   "model": "fantasy_office_building_2",
+   "file": "models/fantasy_office_building_2.ifc",
+   "category": 3,
+   "answer_type": "mcq",
+   "options": {
+    "A": "1767.3 m²",
+    "B": "360.0 m²",
+    "C": "716.1 m²",
+    "D": "327.4 m²"
+   },
+   "question": "Model fantasy_office_building_2.ifc. What is the building's footprint area?\nA. 1767.3 m²\nB. 360.0 m²\nC. 716.1 m²\nD. 327.4 m²\nAnswer with the letter (A, B, C or D) of the one correct option."
+  },
+  {
+   "id": "q14",
+   "model": "ac20",
+   "file": "models/ac20.ifc",
+   "category": 1,
+   "answer_type": "enum",
+   "choices": [
+    "ARCHICAD-64",
+    "Autodesk Revit Architecture 2011",
+    "Autodesk Revit 2024 (DEU)",
+    "Autodesk Revit 2024 (ENU)",
+    "Autodesk Revit 2025 (DEU)",
+    "Autodesk Revit 2025 (ENU)"
+   ],
+   "question": "Model ac20.ifc. Which authoring application exported this IFC file?\nAnswer with exactly one of: \"ARCHICAD-64\", \"Autodesk Revit Architecture 2011\", \"Autodesk Revit 2024 (DEU)\", \"Autodesk Revit 2024 (ENU)\", \"Autodesk Revit 2025 (DEU)\", \"Autodesk Revit 2025 (ENU)\"."
+  },
+  {
+   "id": "q03",
+   "model": "4351",
+   "file": "models/4351.ifc",
+   "category": 2,
+   "answer_type": "float",
+   "unit": "m",
+   "tolerance": 0.2,
+   "question": "Model 4351.ifc. What is the total length of the interior (non-external) walls?\nAnswer with a number in m; answers within ±0.2 m count as correct."
+  },
+  {
+   "id": "q63",
+   "model": "smiley_west",
+   "file": "models/smiley_west.ifc",
+   "category": 4,
+   "answer_type": "mcq",
+   "options": {
+    "A": "Electrical lighting circuits",
+    "B": "Mechanical ventilation with air terminals in every flat",
+    "C": "Cannot be determined from the model",
+    "D": "Heating and domestic hot water, as IfcSystem groups"
+   },
+   "question": "Model smiley_west.ifc. Which MEP systems are installed in the building?\nA. Electrical lighting circuits\nB. Mechanical ventilation with air terminals in every flat\nC. Cannot be determined from the model\nD. Heating and domestic hot water, as IfcSystem groups\nAnswer with the letter (A, B, C or D) of the one correct option."
+  },
+  {
+   "id": "q47",
+   "model": "fantasy_office_building_3",
+   "file": "models/fantasy_office_building_3.ifc",
+   "category": 3,
+   "answer_type": "mcq",
+   "options": {
+    "A": "519.0 m²",
+    "B": "358.0 m²",
+    "C": "259.5 m²",
+    "D": "1613.7 m²"
+   },
+   "question": "Model fantasy_office_building_3.ifc. What is the building's footprint area?\nA. 519.0 m²\nB. 358.0 m²\nC. 259.5 m²\nD. 1613.7 m²\nAnswer with the letter (A, B, C or D) of the one correct option."
+  },
+  {
+   "id": "q49",
+   "model": "fantasy_residential_building_1",
+   "file": "models/fantasy_residential_building_1.ifc",
+   "category": 1,
+   "answer_type": "float",
+   "unit": "m",
+   "tolerance": 0.01,
+   "question": "Model fantasy_residential_building_1.ifc. What is the elevation of the storey 'First Floor'?\nAnswer with a number in m; answers within ±0.01 m count as correct."
+  },
+  {
+   "id": "q27",
+   "model": "duplex_mep",
+   "file": "models/duplex_mep.ifc",
+   "category": 2,
+   "answer_type": "integer",
+   "question": "Model duplex_mep.ifc. How many luminaires (light fixtures, not light switches) are there in the model?\nAnswer with an integer."
+  },
+  {
+   "id": "q31",
+   "model": "fantasy_hotel_1",
+   "file": "models/fantasy_hotel_1.ifc",
+   "category": 1,
+   "answer_type": "integer",
+   "question": "Model fantasy_hotel_1.ifc. How many furniture items are in room 112?\nAnswer with an integer."
+  },
+  {
+   "id": "q59",
+   "model": "fzk_house",
+   "file": "models/fzk_house.ifc",
+   "category": 4,
+   "answer_type": "mcq",
+   "options": {
+    "A": "62 % load-bearing: the eight 300 mm walls",
+    "B": "Cannot be determined from the model",
+    "C": "0 %: every wall is marked non-load-bearing",
+    "D": "100 % load-bearing"
+   },
+   "question": "Model fzk_house.ifc. What percentage of the walls are load-bearing versus non-load-bearing?\nA. 62 % load-bearing: the eight 300 mm walls\nB. Cannot be determined from the model\nC. 0 %: every wall is marked non-load-bearing\nD. 100 % load-bearing\nAnswer with the letter (A, B, C or D) of the one correct option."
+  },
+  {
+   "id": "q36",
+   "model": "fantasy_office_building_1",
+   "file": "models/fantasy_office_building_1.ifc",
+   "category": 3,
+   "answer_type": "mcq",
+   "options": {
+    "A": "1257.07 m²",
+    "B": "112.29 m²",
+    "C": "144.97 m²",
+    "D": "331.69 m²"
+   },
+   "question": "Model fantasy_office_building_1.ifc. What is the gross floor area of the ground floor (storey EG), as the sum of its space areas?\nA. 1257.07 m²\nB. 112.29 m²\nC. 144.97 m²\nD. 331.69 m²\nAnswer with the letter (A, B, C or D) of the one correct option."
+  },
+  {
+   "id": "q23",
+   "model": "duplex_arc",
+   "file": "models/duplex_arc.ifc",
+   "category": 4,
+   "answer_type": "mcq",
+   "options": {
+    "A": "Cannot be determined from the model",
+    "B": "About 27 m²",
+    "C": "About 43 m²",
+    "D": "About 66 m²"
+   },
+   "question": "Model duplex_arc.ifc. What is the approximate total area of the windows in the building?\nA. Cannot be determined from the model\nB. About 27 m²\nC. About 43 m²\nD. About 66 m²\nAnswer with the letter (A, B, C or D) of the one correct option."
+  },
+  {
+   "id": "q39",
+   "model": "fantasy_office_building_2",
+   "file": "models/fantasy_office_building_2.ifc",
+   "category": 1,
+   "answer_type": "enum",
+   "choices": [
+    "ARCHICAD-64",
+    "Autodesk Revit Architecture 2011",
+    "Autodesk Revit 2024 (DEU)",
+    "Autodesk Revit 2024 (ENU)",
+    "Autodesk Revit 2025 (DEU)",
+    "Autodesk Revit 2025 (ENU)"
+   ],
+   "question": "Model fantasy_office_building_2.ifc. Which authoring application exported this IFC file?\nAnswer with exactly one of: \"ARCHICAD-64\", \"Autodesk Revit Architecture 2011\", \"Autodesk Revit 2024 (DEU)\", \"Autodesk Revit 2024 (ENU)\", \"Autodesk Revit 2025 (DEU)\", \"Autodesk Revit 2025 (ENU)\"."
+  },
+  {
+   "id": "q16",
+   "model": "ac20",
+   "file": "models/ac20.ifc",
+   "category": 2,
+   "answer_type": "integer",
+   "question": "Model ac20.ifc. How many doors are there in the building?\nAnswer with an integer."
+  },
+  {
+   "id": "q09",
+   "model": "4351",
+   "file": "models/4351.ifc",
+   "category": 3,
+   "answer_type": "mcq",
+   "options": {
+    "A": "15.50 m",
+    "B": "4.72 m",
+    "C": "3.96 m",
+    "D": "4.42 m"
+   },
+   "question": "Model 4351.ifc. What is the floor-to-floor height between storeys '01 First Floor' and '02 Second Floor'?\nA. 15.50 m\nB. 4.72 m\nC. 3.96 m\nD. 4.42 m\nAnswer with the letter (A, B, C or D) of the one correct option."
+  },
+  {
+   "id": "q61",
+   "model": "smiley_west",
+   "file": "models/smiley_west.ifc",
+   "category": 2,
+   "answer_type": "float",
+   "unit": "m",
+   "tolerance": 0.01,
+   "question": "Model smiley_west.ifc. What is the elevation of the storey '1.OG'?\nAnswer with a number in m; answers within ±0.01 m count as correct."
+  },
+  {
+   "id": "q46",
+   "model": "fantasy_office_building_3",
+   "file": "models/fantasy_office_building_3.ifc",
+   "category": 3,
+   "answer_type": "mcq",
+   "options": {
+    "A": "244.55 m²",
+    "B": "1613.73 m²",
+    "C": "299.30 m²",
+    "D": "358.01 m²"
+   },
+   "question": "Model fantasy_office_building_3.ifc. What is the gross floor area of the ground floor (storey EG), as the sum of its room areas?\nA. 244.55 m²\nB. 1613.73 m²\nC. 299.30 m²\nD. 358.01 m²\nAnswer with the letter (A, B, C or D) of the one correct option."
+  },
+  {
+   "id": "q53",
+   "model": "fantasy_residential_building_1",
+   "file": "models/fantasy_residential_building_1.ifc",
+   "category": 4,
+   "answer_type": "mcq",
+   "options": {
+    "A": "Cannot be determined from the model",
+    "B": "6 units, one per kitchen and living room",
+    "C": "3 units, one per storey",
+    "D": "12 units, two per stairwell and storey"
+   },
+   "question": "Model fantasy_residential_building_1.ifc. How many residential units are in this building?\nA. Cannot be determined from the model\nB. 6 units, one per kitchen and living room\nC. 3 units, one per storey\nD. 12 units, two per stairwell and storey\nAnswer with the letter (A, B, C or D) of the one correct option."
+  },
+  {
+   "id": "q26",
+   "model": "duplex_mep",
+   "file": "models/duplex_mep.ifc",
+   "category": 1,
+   "answer_type": "float",
+   "unit": "litres per flush",
+   "tolerance": 0.05,
+   "question": "Model duplex_mep.ifc. What flush volume is specified for the water closets?\nAnswer with a number in litres per flush; answers within ±0.05 litres per flush count as correct."
+  },
+  {
+   "id": "q30",
+   "model": "fantasy_hotel_1",
+   "file": "models/fantasy_hotel_1.ifc",
+   "category": 1,
+   "answer_type": "enum",
+   "choices": [
+    "ARCHICAD-64",
+    "Autodesk Revit Architecture 2011",
+    "Autodesk Revit 2024 (DEU)",
+    "Autodesk Revit 2024 (ENU)",
+    "Autodesk Revit 2025 (DEU)",
+    "Autodesk Revit 2025 (ENU)"
+   ],
+   "question": "Model fantasy_hotel_1.ifc. Which authoring application exported this IFC file?\nAnswer with exactly one of: \"ARCHICAD-64\", \"Autodesk Revit Architecture 2011\", \"Autodesk Revit 2024 (DEU)\", \"Autodesk Revit 2024 (ENU)\", \"Autodesk Revit 2025 (DEU)\", \"Autodesk Revit 2025 (ENU)\"."
+  },
+  {
+   "id": "q57",
+   "model": "fzk_house",
+   "file": "models/fzk_house.ifc",
+   "category": 2,
+   "answer_type": "integer",
+   "question": "Model fzk_house.ifc. How many doors are there in the building?\nAnswer with an integer."
+  },
+  {
+   "id": "q38",
+   "model": "fantasy_office_building_1",
+   "file": "models/fantasy_office_building_1.ifc",
+   "category": 4,
+   "answer_type": "mcq",
+   "options": {
+    "A": "Yes, but only the facade doors carry a fire rating",
+    "B": "Yes: every door is rated T30",
+    "C": "Yes: the steel-frame doors are rated EI 30",
+    "D": "No, no door or door type has a fire rating"
+   },
+   "question": "Model fantasy_office_building_1.ifc. Is fire rating information available for the doors in this model?\nA. Yes, but only the facade doors carry a fire rating\nB. Yes: every door is rated T30\nC. Yes: the steel-frame doors are rated EI 30\nD. No, no door or door type has a fire rating\nAnswer with the letter (A, B, C or D) of the one correct option."
+  },
+  {
+   "id": "q22",
+   "model": "duplex_arc",
+   "file": "models/duplex_arc.ifc",
+   "category": 3,
+   "answer_type": "mcq",
+   "options": {
+    "A": "18.85 m²",
+    "B": "8.00 m²",
+    "C": "9.41 m²",
+    "D": "10.86 m²"
+   },
+   "question": "Model duplex_arc.ifc. What is the total floor area of all bathrooms?\nA. 18.85 m²\nB. 8.00 m²\nC. 9.41 m²\nD. 10.86 m²\nAnswer with the letter (A, B, C or D) of the one correct option."
+  },
+  {
+   "id": "q43",
+   "model": "fantasy_office_building_2",
+   "file": "models/fantasy_office_building_2.ifc",
+   "category": 4,
+   "answer_type": "mcq",
+   "options": {
+    "A": "Yes: the steel-frame windows are rated EI 30",
+    "B": "Yes, but only the facade windows carry a fire rating",
+    "C": "Yes: every window is rated T30",
+    "D": "No, no window or window type has a fire rating"
+   },
+   "question": "Model fantasy_office_building_2.ifc. Is fire rating information available for the windows in this model?\nA. Yes: the steel-frame windows are rated EI 30\nB. Yes, but only the facade windows carry a fire rating\nC. Yes: every window is rated T30\nD. No, no window or window type has a fire rating\nAnswer with the letter (A, B, C or D) of the one correct option."
+  },
+  {
+   "id": "q17",
+   "model": "ac20",
+   "file": "models/ac20.ifc",
+   "category": 3,
+   "answer_type": "mcq",
+   "options": {
+    "A": "A timber rafter roof modelled with IfcMember elements",
+    "B": "A reinforced-concrete roof slab carried by steel beams",
+    "C": "21 aluminium ROOF slabs, with no beams or members below them",
+    "D": "A single IfcRoof assembly aggregating the five floor slabs"
+   },
+   "question": "Model ac20.ifc. Which roof structure elements are used?\nA. A timber rafter roof modelled with IfcMember elements\nB. A reinforced-concrete roof slab carried by steel beams\nC. 21 aluminium ROOF slabs, with no beams or members below them\nD. A single IfcRoof assembly aggregating the five floor slabs\nAnswer with the letter (A, B, C or D) of the one correct option."
+  },
+  {
+   "id": "q05",
+   "model": "4351",
+   "file": "models/4351.ifc",
+   "category": 2,
+   "answer_type": "float",
+   "unit": "m",
+   "tolerance": 0.01,
+   "question": "Model 4351.ifc. What is the largest overall door width used in the building?\nAnswer with a number in m; answers within ±0.01 m count as correct."
+  },
+  {
+   "id": "q62",
+   "model": "smiley_west",
+   "file": "models/smiley_west.ifc",
+   "category": 3,
+   "answer_type": "mcq",
+   "options": {
+    "A": "The 'ZIMMER' bedrooms on 1.OG, 14.6 m² each",
+    "B": "The 'KELLERRAUM' basement rooms in KG, 29.5 m² each",
+    "C": "The 'WOHNEN / KOCHEN' rooms on EG, 34.6 m² each",
+    "D": "The 'FLUR' corridor spaces, 13.7 m² each"
+   },
+   "question": "Model smiley_west.ifc. Which rooms in the building are the largest by net floor area?\nA. The 'ZIMMER' bedrooms on 1.OG, 14.6 m² each\nB. The 'KELLERRAUM' basement rooms in KG, 29.5 m² each\nC. The 'WOHNEN / KOCHEN' rooms on EG, 34.6 m² each\nD. The 'FLUR' corridor spaces, 13.7 m² each\nAnswer with the letter (A, B, C or D) of the one correct option."
+  },
+  {
+   "id": "q44",
+   "model": "fantasy_office_building_3",
+   "file": "models/fantasy_office_building_3.ifc",
+   "category": 1,
+   "answer_type": "enum",
+   "choices": [
+    "130625",
+    "BIM_Aufgabe_1_Gebäudetyp_A",
+    "Bürogebäude",
+    "Default"
+   ],
+   "question": "Model fantasy_office_building_3.ifc. What is the project name (the Name of IfcProject)?\nAnswer with exactly one of: \"130625\", \"BIM_Aufgabe_1_Gebäudetyp_A\", \"Bürogebäude\", \"Default\"."
+  },
+  {
+   "id": "q54",
+   "model": "fantasy_residential_building_1",
+   "file": "models/fantasy_residential_building_1.ifc",
+   "category": 4,
+   "answer_type": "mcq",
+   "options": {
+    "A": "Cannot be determined from the model",
+    "B": "About 510 m³",
+    "C": "About 241 m³",
+    "D": "About 461 m³, two floors and the base slab"
+   },
+   "question": "Model fantasy_residential_building_1.ifc. What is the total volume of the floor slabs (the two storey floors and the base slab)?\nA. Cannot be determined from the model\nB. About 510 m³\nC. About 241 m³\nD. About 461 m³, two floors and the base slab\nAnswer with the letter (A, B, C or D) of the one correct option."
+  },
+  {
+   "id": "q28",
+   "model": "duplex_mep",
+   "file": "models/duplex_mep.ifc",
+   "category": 4,
+   "answer_type": "mcq",
+   "options": {
+    "A": "Cannot be determined from the model",
+    "B": "About 9,500 kWh per year",
+    "C": "About 2,575 MWh per year from the two 147 kW boilers",
+    "D": "About 21,000 kWh per year"
+   },
+   "question": "Model duplex_mep.ifc. What is the predicted annual energy consumption of the building?\nA. Cannot be determined from the model\nB. About 9,500 kWh per year\nC. About 2,575 MWh per year from the two 147 kW boilers\nD. About 21,000 kWh per year\nAnswer with the letter (A, B, C or D) of the one correct option."
+  },
+  {
+   "id": "q32",
+   "model": "fantasy_hotel_1",
+   "file": "models/fantasy_hotel_1.ifc",
+   "category": 2,
+   "answer_type": "integer",
+   "question": "Model fantasy_hotel_1.ifc. How many doors are there in the building?\nAnswer with an integer."
+  },
+  {
+   "id": "q56",
+   "model": "fzk_house",
+   "file": "models/fzk_house.ifc",
+   "category": 1,
+   "answer_type": "enum",
+   "choices": [
+    "Bad",
+    "Buero",
+    "Flur",
+    "Galerie",
+    "Küche",
+    "Schlafzimmer",
+    "Wohnen"
+   ],
+   "question": "Model fzk_house.ifc. Which room has the largest net floor area?\nAnswer with exactly one of: \"Bad\", \"Buero\", \"Flur\", \"Galerie\", \"Küche\", \"Schlafzimmer\", \"Wohnen\"."
+  },
+  {
+   "id": "q34",
+   "model": "fantasy_office_building_1",
+   "file": "models/fantasy_office_building_1.ifc",
+   "category": 1,
+   "answer_type": "enum",
+   "choices": [
+    "ARCHICAD-64",
+    "Autodesk Revit Architecture 2011",
+    "Autodesk Revit 2024 (DEU)",
+    "Autodesk Revit 2024 (ENU)",
+    "Autodesk Revit 2025 (DEU)",
+    "Autodesk Revit 2025 (ENU)"
+   ],
+   "question": "Model fantasy_office_building_1.ifc. Which authoring application exported this IFC file?\nAnswer with exactly one of: \"ARCHICAD-64\", \"Autodesk Revit Architecture 2011\", \"Autodesk Revit 2024 (DEU)\", \"Autodesk Revit 2024 (ENU)\", \"Autodesk Revit 2025 (DEU)\", \"Autodesk Revit 2025 (ENU)\"."
+  },
+  {
+   "id": "q21",
+   "model": "duplex_arc",
+   "file": "models/duplex_arc.ifc",
+   "category": 2,
+   "answer_type": "integer",
+   "question": "Model duplex_arc.ifc. How many interior doors are there in the building?\nAnswer with an integer."
+  },
+  {
+   "id": "q42",
+   "model": "fantasy_office_building_2",
+   "file": "models/fantasy_office_building_2.ifc",
+   "category": 3,
+   "answer_type": "mcq",
+   "options": {
+    "A": "1732.0 m³",
+    "B": "692.8 m³",
+    "C": "72.0 m³",
+    "D": "346.4 m³"
+   },
+   "question": "Model fantasy_office_building_2.ifc. What is the combined total volume of all the floor slabs?\nA. 1732.0 m³\nB. 692.8 m³\nC. 72.0 m³\nD. 346.4 m³\nAnswer with the letter (A, B, C or D) of the one correct option."
+  }
+ ]
+}

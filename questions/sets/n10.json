@@ -1,0 +1,155 @@
+{
+ "name": "n10",
+ "seed": 20261126,
+ "n": 10,
+ "description": "10 question(s) spread over the models (prefix of one seeded round-robin order, so smaller sets are nested in larger ones)",
+ "models": [
+  "4351",
+  "ac20",
+  "duplex_arc",
+  "duplex_mep",
+  "fantasy_hotel_1",
+  "fantasy_office_building_1",
+  "fantasy_office_building_2",
+  "fantasy_residential_building_1",
+  "fzk_house",
+  "smiley_west"
+ ],
+ "ids": [
+  "q50",
+  "q25",
+  "q33",
+  "q58",
+  "q37",
+  "q24",
+  "q41",
+  "q14",
+  "q03",
+  "q63"
+ ],
+ "questions": [
+  {
+   "id": "q50",
+   "model": "fantasy_residential_building_1",
+   "file": "models/fantasy_residential_building_1.ifc",
+   "category": 2,
+   "answer_type": "integer",
+   "question": "Model fantasy_residential_building_1.ifc. How many doors are there in the building?\nAnswer with an integer."
+  },
+  {
+   "id": "q25",
+   "model": "duplex_mep",
+   "file": "models/duplex_mep.ifc",
+   "category": 1,
+   "answer_type": "set",
+   "item": "room number such as A102 (drop any -M suffix)",
+   "question": "Model duplex_mep.ifc. In which rooms are the main electrical panels located?\nAnswer with a JSON list of strings, one room number such as A102 (drop any -M suffix) per entry; order does not matter."
+  },
+  {
+   "id": "q33",
+   "model": "fantasy_hotel_1",
+   "file": "models/fantasy_hotel_1.ifc",
+   "category": 4,
+   "answer_type": "mcq",
+   "options": {
+    "A": "A heat pump on the 'Mumti' roof level",
+    "B": "Underfloor heating",
+    "C": "Cannot be determined from the model",
+    "D": "Radiators in each guest room, fed by a gas boiler"
+   },
+   "question": "Model fantasy_hotel_1.ifc. What heating systems are installed?\nA. A heat pump on the 'Mumti' roof level\nB. Underfloor heating\nC. Cannot be determined from the model\nD. Radiators in each guest room, fed by a gas boiler\nAnswer with the letter (A, B, C or D) of the one correct option."
+  },
+  {
+   "id": "q58",
+   "model": "fzk_house",
+   "file": "models/fzk_house.ifc",
+   "category": 2,
+   "answer_type": "float",
+   "unit": "m",
+   "tolerance": 0.5,
+   "question": "Model fzk_house.ifc. What is the total length of the exterior walls?\nAnswer with a number in m; answers within ±0.5 m count as correct."
+  },
+  {
+   "id": "q37",
+   "model": "fantasy_office_building_1",
+   "file": "models/fantasy_office_building_1.ifc",
+   "category": 3,
+   "answer_type": "mcq",
+   "options": {
+    "A": "1370.3 m³",
+    "B": "577.4 m³",
+    "C": "351.2 m³",
+    "D": "190.1 m³"
+   },
+   "question": "Model fantasy_office_building_1.ifc. What is the total volume of all floor slabs combined?\nA. 1370.3 m³\nB. 577.4 m³\nC. 351.2 m³\nD. 190.1 m³\nAnswer with the letter (A, B, C or D) of the one correct option."
+  },
+  {
+   "id": "q24",
+   "model": "duplex_arc",
+   "file": "models/duplex_arc.ifc",
+   "category": 4,
+   "answer_type": "mcq",
+   "options": {
+    "A": "Cannot be determined from the model",
+    "B": "About 32.3 m³",
+    "C": "About 16.5 m³ over the 7 wall footings",
+    "D": "About 48.8 m³"
+   },
+   "question": "Model duplex_arc.ifc. What volume of concrete do the wall footings of the foundation need?\nA. Cannot be determined from the model\nB. About 32.3 m³\nC. About 16.5 m³ over the 7 wall footings\nD. About 48.8 m³\nAnswer with the letter (A, B, C or D) of the one correct option."
+  },
+  {
+   "id": "q41",
+   "model": "fantasy_office_building_2",
+   "file": "models/fantasy_office_building_2.ifc",
+   "category": 3,
+   "answer_type": "mcq",
+   "options": {
+    "A": "1767.3 m²",
+    "B": "360.0 m²",
+    "C": "716.1 m²",
+    "D": "327.4 m²"
+   },
+   "question": "Model fantasy_office_building_2.ifc. What is the building's footprint area?\nA. 1767.3 m²\nB. 360.0 m²\nC. 716.1 m²\nD. 327.4 m²\nAnswer with the letter (A, B, C or D) of the one correct option."
+  },
+  {
+   "id": "q14",
+   "model": "ac20",
+   "file": "models/ac20.ifc",
+   "category": 1,
+   "answer_type": "enum",
+   "choices": [
+    "ARCHICAD-64",
+    "Autodesk Revit Architecture 2011",
+    "Autodesk Revit 2024 (DEU)",
+    "Autodesk Revit 2024 (ENU)",
+    "Autodesk Revit 2025 (DEU)",
+    "Autodesk Revit 2025 (ENU)"
+   ],
+   "question": "Model ac20.ifc. Which authoring application exported this IFC file?\nAnswer with exactly one of: \"ARCHICAD-64\", \"Autodesk Revit Architecture 2011\", \"Autodesk Revit 2024 (DEU)\", \"Autodesk Revit 2024 (ENU)\", \"Autodesk Revit 2025 (DEU)\", \"Autodesk Revit 2025 (ENU)\"."
+  },
+  {
+   "id": "q03",
+   "model": "4351",
+   "file": "models/4351.ifc",
+   "category": 2,
+   "answer_type": "float",
+   "unit": "m",
+   "tolerance": 0.2,
+   "question": "Model 4351.ifc. What is the total length of the interior (non-external) walls?\nAnswer with a number in m; answers within ±0.2 m count as correct."
+  },
+  {
+   "id": "q63",
+   "model": "smiley_west",
+   "file": "models/smiley_west.ifc",
+   "category": 4,
+   "answer_type": "mcq",
+   "options": {
+    "A": "Electrical lighting circuits",
+    "B": "Mechanical ventilation with air terminals in every flat",
+    "C": "Cannot be determined from the model",
+    "D": "Heating and domestic hot water, as IfcSystem groups"
+   },
+   "question": "Model smiley_west.ifc. Which MEP systems are installed in the building?\nA. Electrical lighting circuits\nB. Mechanical ventilation with air terminals in every flat\nC. Cannot be determined from the model\nD. Heating and domestic hot water, as IfcSystem groups\nAnswer with the letter (A, B, C or D) of the one correct option."
+  }
+ ]
+}

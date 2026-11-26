@@ -1,0 +1,77 @@
+{
+ "name": "n05",
+ "seed": 20261126,
+ "n": 5,
+ "description": "5 question(s) spread over the models (prefix of one seeded round-robin order, so smaller sets are nested in larger ones)",
+ "models": [
+  "duplex_mep",
+  "fantasy_hotel_1",
+  "fantasy_office_building_1",
+  "fantasy_residential_building_1",
+  "fzk_house"
+ ],
+ "ids": [
+  "q50",
+  "q25",
+  "q33",
+  "q58",
+  "q37"
+ ],
+ "questions": [
+  {
+   "id": "q50",
+   "model": "fantasy_residential_building_1",
+   "file": "models/fantasy_residential_building_1.ifc",
+   "category": 2,
+   "answer_type": "integer",
+   "question": "Model fantasy_residential_building_1.ifc. How many doors are there in the building?\nAnswer with an integer."
+  },
+  {
+   "id": "q25",
+   "model": "duplex_mep",
+   "file": "models/duplex_mep.ifc",
+   "category": 1,
+   "answer_type": "set",
+   "item": "room number such as A102 (drop any -M suffix)",
+   "question": "Model duplex_mep.ifc. In which rooms are the main electrical panels located?\nAnswer with a JSON list of strings, one room number such as A102 (drop any -M suffix) per entry; order does not matter."
+  },
+  {
+   "id": "q33",
+   "model": "fantasy_hotel_1",
+   "file": "models/fantasy_hotel_1.ifc",
+   "category": 4,
+   "answer_type": "mcq",
+   "options": {
+    "A": "A heat pump on the 'Mumti' roof level",
+    "B": "Underfloor heating",
+    "C": "Cannot be determined from the model",
+    "D": "Radiators in each guest room, fed by a gas boiler"
+   },
+   "question": "Model fantasy_hotel_1.ifc. What heating systems are installed?\nA. A heat pump on the 'Mumti' roof level\nB. Underfloor heating\nC. Cannot be determined from the model\nD. Radiators in each guest room, fed by a gas boiler\nAnswer with the letter (A, B, C or D) of the one correct option."
+  },
+  {
+   "id": "q58",
+   "model": "fzk_house",
+   "file": "models/fzk_house.ifc",
+   "category": 2,
+   "answer_type": "float",
+   "unit": "m",
+   "tolerance": 0.5,
+   "question": "Model fzk_house.ifc. What is the total length of the exterior walls?\nAnswer with a number in m; answers within ±0.5 m count as correct."
+  },
+  {
+   "id": "q37",
+   "model": "fantasy_office_building_1",
+   "file": "models/fantasy_office_building_1.ifc",
+   "category": 3,
+   "answer_type": "mcq",
+   "options": {
+    "A": "1370.3 m³",
+    "B": "577.4 m³",
+    "C": "351.2 m³",
+    "D": "190.1 m³"
+   },
+   "question": "Model fantasy_office_building_1.ifc. What is the total volume of all floor slabs combined?\nA. 1370.3 m³\nB. 577.4 m³\nC. 351.2 m³\nD. 190.1 m³\nAnswer with the letter (A, B, C or D) of the one correct option."
+  }
+ ]
+}

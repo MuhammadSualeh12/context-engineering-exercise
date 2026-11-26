@@ -1,0 +1,80 @@
+{
+ "name": "single_4351_n05",
+ "seed": 20261126,
+ "n": 5,
+ "description": "5 questions, all on 4351.ifc",
+ "models": [
+  "4351"
+ ],
+ "ids": [
+  "q01",
+  "q04",
+  "q09",
+  "q12",
+  "q02"
+ ],
+ "questions": [
+  {
+   "id": "q01",
+   "model": "4351",
+   "file": "models/4351.ifc",
+   "category": 1,
+   "answer_type": "enum",
+   "choices": [
+    "ARCHICAD-64",
+    "Autodesk Revit Architecture 2011",
+    "Autodesk Revit 2024 (DEU)",
+    "Autodesk Revit 2024 (ENU)",
+    "Autodesk Revit 2025 (DEU)",
+    "Autodesk Revit 2025 (ENU)"
+   ],
+   "question": "Model 4351.ifc. Which authoring application exported this IFC file?\nAnswer with exactly one of: \"ARCHICAD-64\", \"Autodesk Revit Architecture 2011\", \"Autodesk Revit 2024 (DEU)\", \"Autodesk Revit 2024 (ENU)\", \"Autodesk Revit 2025 (DEU)\", \"Autodesk Revit 2025 (ENU)\"."
+  },
+  {
+   "id": "q04",
+   "model": "4351",
+   "file": "models/4351.ifc",
+   "category": 2,
+   "answer_type": "float",
+   "unit": "m",
+   "tolerance": 0.01,
+   "question": "Model 4351.ifc. What is the average overall width of the doors in the building?\nAnswer with a number in m; answers within ±0.01 m count as correct."
+  },
+  {
+   "id": "q09",
+   "model": "4351",
+   "file": "models/4351.ifc",
+   "category": 3,
+   "answer_type": "mcq",
+   "options": {
+    "A": "15.50 m",
+    "B": "4.72 m",
+    "C": "3.96 m",
+    "D": "4.42 m"
+   },
+   "question": "Model 4351.ifc. What is the floor-to-floor height between storeys '01 First Floor' and '02 Second Floor'?\nA. 15.50 m\nB. 4.72 m\nC. 3.96 m\nD. 4.42 m\nAnswer with the letter (A, B, C or D) of the one correct option."
+  },
+  {
+   "id": "q12",
+   "model": "4351",
+   "file": "models/4351.ifc",
+   "category": 4,
+   "answer_type": "mcq",
+   "options": {
+    "A": "About 85 m of copper supply pipe",
+    "B": "Cannot be determined from the model",
+    "C": "About 40 m, one riser per storey",
+    "D": "About 160 m, hot-water return included"
+   },
+   "question": "Model 4351.ifc. What is the total length of water supply piping in the building?\nA. About 85 m of copper supply pipe\nB. Cannot be determined from the model\nC. About 40 m, one riser per storey\nD. About 160 m, hot-water return included\nAnswer with the letter (A, B, C or D) of the one correct option."
+  },
+  {
+   "id": "q02",
+   "model": "4351",
+   "file": "models/4351.ifc",
+   "category": 2,
+   "answer_type": "integer",
+   "question": "Model 4351.ifc. How many doors in the model use the door type '36\" x 84\"' (the Single-Flush 36 x 84 inch door)?\nAnswer with an integer."
+  }
+ ]
+}

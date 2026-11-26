@@ -1,0 +1,22 @@
+{
+ "name": "n01",
+ "seed": 20261126,
+ "n": 1,
+ "description": "1 question(s) spread over the models (prefix of one seeded round-robin order, so smaller sets are nested in larger ones)",
+ "models": [
+  "fantasy_residential_building_1"
+ ],
+ "ids": [
+  "q50"
+ ],
+ "questions": [
+  {
+   "id": "q50",
+   "model": "fantasy_residential_building_1",
+   "file": "models/fantasy_residential_building_1.ifc",
+   "category": 2,
+   "answer_type": "integer",
+   "question": "Model fantasy_residential_building_1.ifc. How many doors are there in the building?\nAnswer with an integer."
+  }
+ ]
+}
